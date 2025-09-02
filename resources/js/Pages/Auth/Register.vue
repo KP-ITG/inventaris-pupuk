@@ -7,10 +7,13 @@ import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
-    name: '',
+    nama: '',
     email: '',
     password: '',
     password_confirmation: '',
+    role: 'distributor',
+    alamat: '',
+    kontak: '',
 });
 
 const submit = () => {
@@ -26,19 +29,19 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="name" value="Name" />
+                <InputLabel for="nama" value="Nama Lengkap" />
 
                 <TextInput
-                    id="name"
+                    id="nama"
                     type="text"
                     class="mt-1 block w-full"
-                    v-model="form.name"
+                    v-model="form.nama"
                     required
                     autofocus
                     autocomplete="name"
                 />
 
-                <InputError class="mt-2" :message="form.errors.name" />
+                <InputError class="mt-2" :message="form.errors.nama" />
             </div>
 
             <div class="mt-4">
@@ -74,7 +77,7 @@ const submit = () => {
             <div class="mt-4">
                 <InputLabel
                     for="password_confirmation"
-                    value="Confirm Password"
+                    value="Konfirmasi Password"
                 />
 
                 <TextInput
@@ -92,12 +95,55 @@ const submit = () => {
                 />
             </div>
 
+            <div class="mt-4">
+                <InputLabel for="role" value="Role" />
+
+                <select
+                    id="role"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    v-model="form.role"
+                >
+                    <option value="distributor">Distributor</option>
+                    <option value="admin">Admin</option>
+                </select>
+
+                <InputError class="mt-2" :message="form.errors.role" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="alamat" value="Alamat (Opsional)" />
+
+                <TextInput
+                    id="alamat"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.alamat"
+                    autocomplete="address"
+                />
+
+                <InputError class="mt-2" :message="form.errors.alamat" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="kontak" value="Nomor Kontak (Opsional)" />
+
+                <TextInput
+                    id="kontak"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.kontak"
+                    autocomplete="tel"
+                />
+
+                <InputError class="mt-2" :message="form.errors.kontak" />
+            </div>
+
             <div class="mt-4 flex items-center justify-end">
                 <Link
                     :href="route('login')"
                     class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                    Already registered?
+                    Sudah punya akun?
                 </Link>
 
                 <PrimaryButton
@@ -105,7 +151,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Register
+                    Daftar
                 </PrimaryButton>
             </div>
         </form>

@@ -5,7 +5,7 @@ namespace App\Http\Requests\Auth;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules;
 
-class LoginRequest extends FormRequest
+class RegisterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,8 +23,12 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'nama' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:pengguna,email'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['sometimes', 'string', 'in:admin,distributor'],
+            'alamat' => ['nullable', 'string', 'max:255'],
+            'kontak' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -36,8 +40,12 @@ class LoginRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'nama' => 'nama lengkap',
             'email' => 'alamat email',
             'password' => 'kata sandi',
+            'password_confirmation' => 'konfirmasi kata sandi',
+            'alamat' => 'alamat',
+            'kontak' => 'nomor kontak',
         ];
     }
 }
