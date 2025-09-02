@@ -27,8 +27,8 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:pengguna,email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['sometimes', 'string', 'in:admin,distributor'],
-            'alamat' => ['nullable', 'string', 'max:255'],
-            'kontak' => ['nullable', 'string', 'max:255'],
+            'alamat' => ['required', 'string', 'max:255'],
+            'kontak' => ['required', 'string', 'max:255'],
         ];
     }
 
