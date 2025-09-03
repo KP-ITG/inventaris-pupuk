@@ -10,7 +10,7 @@ const user = computed(() => page.props.auth?.user || {});
 const sidebarOpen = ref(false);
 
 const navigation = computed(() => {
-    const nav = [
+    const mainNav = [
         {
             name: 'Dashboard',
             href: '/dashboard',
@@ -19,21 +19,27 @@ const navigation = computed(() => {
         },
     ];
 
+    const userManagement = [];
+    const dataManagement = [];
+
     // Admin navigation
     if (user.value.role === 'admin') {
-        nav.push(
+        userManagement.push(
             {
                 name: 'Manajemen User',
                 href: '/admin/users',
                 icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z',
-                current: page.url.startsWith('/admin/users')
+                current: page.url === '/admin/users'
             },
             {
                 name: 'Validasi User',
                 href: '/admin/users/validations',
                 icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
                 current: page.url === '/admin/users/validations'
-            },
+            }
+        );
+
+        dataManagement.push(
             {
                 name: 'Manajemen Pupuk',
                 href: '/admin/pupuk',
@@ -48,7 +54,7 @@ const navigation = computed(() => {
             }
         );
     } else {
-        nav.push(
+        dataManagement.push(
             {
                 name: 'Stok Saya',
                 href: '/distributor/stok',
@@ -58,7 +64,11 @@ const navigation = computed(() => {
         );
     }
 
-    return nav;
+    return {
+        main: mainNav,
+        userManagement,
+        dataManagement
+    };
 });
 </script>
 
@@ -81,14 +91,47 @@ const navigation = computed(() => {
                             <img class="h-8 w-auto" src="/assets/images/logo_dinas_pertanian.png" alt="Logo Dinas Pertanian" />
                             <span class="ml-2 text-lg font-semibold text-gray-900">Inventaris Pupuk</span>
                         </div>
-                        <nav class="mt-5 px-2 space-y-1">
-                            <Link v-for="item in navigation" :key="item.name" :href="item.href"
-                                :class="[item.current ? 'bg-green-100 text-green-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-base font-medium rounded-md']">
-                                <svg :class="[item.current ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500', 'mr-4 h-6 w-6']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
-                                </svg>
-                                {{ item.name }}
-                            </Link>
+                        <nav class="mt-5 px-2 space-y-4">
+                            <!-- Main Navigation -->
+                            <div>
+                                <Link v-for="item in navigation.main" :key="item.name" :href="item.href"
+                                    :class="[item.current ? 'bg-green-100 text-green-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-base font-medium rounded-md']">
+                                    <svg :class="[item.current ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500', 'mr-4 h-6 w-6']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                                    </svg>
+                                    {{ item.name }}
+                                </Link>
+                            </div>
+
+                            <!-- User Management -->
+                            <div v-if="navigation.userManagement.length > 0">
+                                <div class="border-t border-gray-200 my-3"></div>
+                                <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Manajemen User</h3>
+                                <div class="mt-2 space-y-1">
+                                    <Link v-for="item in navigation.userManagement" :key="item.name" :href="item.href"
+                                        :class="[item.current ? 'bg-green-100 text-green-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-base font-medium rounded-md']">
+                                        <svg :class="[item.current ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500', 'mr-4 h-6 w-6']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                                        </svg>
+                                        {{ item.name }}
+                                    </Link>
+                                </div>
+                            </div>
+
+                            <!-- Data Management -->
+                            <div v-if="navigation.dataManagement.length > 0">
+                                <div class="border-t border-gray-200 my-3"></div>
+                                <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Manajemen Data</h3>
+                                <div class="mt-2 space-y-1">
+                                    <Link v-for="item in navigation.dataManagement" :key="item.name" :href="item.href"
+                                        :class="[item.current ? 'bg-green-100 text-green-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-base font-medium rounded-md']">
+                                        <svg :class="[item.current ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500', 'mr-4 h-6 w-6']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                                        </svg>
+                                        {{ item.name }}
+                                    </Link>
+                                </div>
+                            </div>
                         </nav>
                     </div>
                 </div>
@@ -104,14 +147,47 @@ const navigation = computed(() => {
                             <img class="h-8 w-auto" src="/assets/images/logo_dinas_pertanian.png" alt="Logo Dinas Pertanian" />
                             <span class="ml-2 text-lg font-semibold text-gray-900">Inventaris Pupuk</span>
                         </div>
-                        <nav class="mt-5 flex-1 px-2 bg-white space-y-1">
-                            <Link v-for="item in navigation" :key="item.name" :href="item.href"
-                                :class="[item.current ? 'bg-green-100 text-green-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-sm font-medium rounded-md']">
-                                <svg :class="[item.current ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500', 'mr-3 h-6 w-6']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
-                                </svg>
-                                {{ item.name }}
-                            </Link>
+                        <nav class="mt-5 flex-1 px-2 bg-white space-y-4">
+                            <!-- Main Navigation -->
+                            <div>
+                                <Link v-for="item in navigation.main" :key="item.name" :href="item.href"
+                                    :class="[item.current ? 'bg-green-100 text-green-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-sm font-medium rounded-md']">
+                                    <svg :class="[item.current ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500', 'mr-3 h-6 w-6']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                                    </svg>
+                                    {{ item.name }}
+                                </Link>
+                            </div>
+
+                            <!-- User Management -->
+                            <div v-if="navigation.userManagement.length > 0">
+                                <div class="border-t border-gray-200 my-3"></div>
+                                <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Manajemen User</h3>
+                                <div class="mt-2 space-y-1">
+                                    <Link v-for="item in navigation.userManagement" :key="item.name" :href="item.href"
+                                        :class="[item.current ? 'bg-green-100 text-green-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-sm font-medium rounded-md']">
+                                        <svg :class="[item.current ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500', 'mr-3 h-6 w-6']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                                        </svg>
+                                        {{ item.name }}
+                                    </Link>
+                                </div>
+                            </div>
+
+                            <!-- Data Management -->
+                            <div v-if="navigation.dataManagement.length > 0">
+                                <div class="border-t border-gray-200 my-3"></div>
+                                <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Manajemen Data</h3>
+                                <div class="mt-2 space-y-1">
+                                    <Link v-for="item in navigation.dataManagement" :key="item.name" :href="item.href"
+                                        :class="[item.current ? 'bg-green-100 text-green-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900', 'group flex items-center px-2 py-2 text-sm font-medium rounded-md']">
+                                        <svg :class="[item.current ? 'text-green-500' : 'text-gray-400 group-hover:text-gray-500', 'mr-3 h-6 w-6']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                                        </svg>
+                                        {{ item.name }}
+                                    </Link>
+                                </div>
+                            </div>
                         </nav>
                     </div>
                     <div class="flex-shrink-0 flex border-t border-gray-200 p-4">
@@ -158,7 +234,7 @@ const navigation = computed(() => {
                                     </div>
                                 </button>
                             </template>
-                            
+
                             <template #content>
                                 <DropdownLink href="/profile">Profile</DropdownLink>
                                 <DropdownLink href="/logout" method="post" as="button">Log Out</DropdownLink>

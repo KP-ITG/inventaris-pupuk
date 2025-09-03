@@ -20,7 +20,7 @@ const processing = ref(false);
 const approveUser = (userId) => {
     if (processing.value) return;
     processing.value = true;
-    
+
     router.patch(`/admin/users/${userId}/approve`, {}, {
         preserveScroll: true,
         onFinish: () => processing.value = false,
@@ -30,7 +30,7 @@ const approveUser = (userId) => {
 const rejectUser = (userId) => {
     if (processing.value) return;
     processing.value = true;
-    
+
     router.patch(`/admin/users/${userId}/reject`, {}, {
         preserveScroll: true,
         onFinish: () => processing.value = false,

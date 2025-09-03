@@ -32,17 +32,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Pupuk management
         Route::resource('pupuk', PupukController::class);
 
-        // All stock management
+        // Stock management for both admin and distributor
         Route::get('/stok', [StokController::class, 'index'])->name('stok.index');
         Route::post('/stok', [StokController::class, 'store'])->name('stok.store');
         Route::patch('/stok/{id}', [StokController::class, 'update'])->name('stok.update');
         Route::delete('/stok/{id}', [StokController::class, 'destroy'])->name('stok.destroy');
     });
 
-    // Distributor routes - can access their own stock
-    Route::middleware('role:distributor,admin')->prefix('distributor')->name('distributor.')->group(function () {
-        Route::get('/stok', [StokController::class, 'myStock'])->name('stok.index');
-        Route::patch('/stok/{id}', [StokController::class, 'updateMyStock'])->name('stok.update');
+    // Distributor routes - access to stock management
+    Route::middleware('role:distributor')->prefix('distributor')->name('distributor.')->group(function () {
+        Route::get('/stok', [StokController::class, 'index'])->name('stok.index');
+        Route::post('/stok', [StokController::class, 'store'])->name('stok.store');
+        Route::patch('/stok/{id}', [StokController::class, 'update'])->name('stok.update');
     });
 });
 

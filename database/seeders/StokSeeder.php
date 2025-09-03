@@ -17,7 +17,7 @@ class StokSeeder extends Seeder
         foreach ($distributors as $distributor) {
             foreach ($pupuks->take(3) as $index => $pupuk) {
                 $jumlah = [100, 250, 500, 50, 25][$index % 5];
-                
+
                 Stok::create([
                     'pupuk_id' => $pupuk->id,
                     'pengguna_id' => $distributor->id,

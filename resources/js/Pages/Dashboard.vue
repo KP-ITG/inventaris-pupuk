@@ -191,7 +191,7 @@ defineProps({
                             <div v-for="stock in myStocks" :key="stock.id" class="flex items-center justify-between py-2 border-b border-gray-200">
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">{{ stock.pupuk?.nama_pupuk || 'Unknown' }}</p>
-                                    <p class="text-xs text-gray-500">{{ stock.pupuk?.kategori_pupuk?.nama_kategori || 'Unknown' }}</p>
+                                    <p class="text-xs text-gray-500">{{ stock.pupuk?.kategori?.nama_kategori || 'Unknown' }}</p>
                                 </div>
                                 <span :class="[
                                     stock.jumlah_stok < 10 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800',

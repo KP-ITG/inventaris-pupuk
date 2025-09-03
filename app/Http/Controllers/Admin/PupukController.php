@@ -12,7 +12,7 @@ class PupukController extends Controller
 {
     public function index()
     {
-        $pupuks = Pupuk::with('kategoriPupuk')->get();
+        $pupuks = Pupuk::with('kategori')->get();
         $categories = KategoriPupuk::all();
 
         return Inertia::render('Admin/Pupuk', [
@@ -63,7 +63,7 @@ class PupukController extends Controller
     public function destroy($id)
     {
         $pupuk = Pupuk::findOrFail($id);
-        
+
         // Check if pupuk is used in stock
         if ($pupuk->stok()->count() > 0) {
             return redirect()->back()->with('error', 'Pupuk tidak dapat dihapus karena masih digunakan dalam stok');

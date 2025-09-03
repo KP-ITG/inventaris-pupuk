@@ -11,7 +11,7 @@ class PupukSeeder extends Seeder
     public function run(): void
     {
         $categories = KategoriPupuk::all();
-        
+
         $pupuks = [
             [
                 'nama_pupuk' => 'Urea 46%',

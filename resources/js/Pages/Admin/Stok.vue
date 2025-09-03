@@ -26,7 +26,7 @@ const openCreateModal = () => {
     form.value = {
         id: null,
         pupuk_id: '',
-        pengguna_id: '',
+        pengguna_id: user.role === 'distributor' ? user.id : '',
         jumlah_stok: '',
     };
     showModal.value = true;
@@ -95,7 +95,6 @@ const getStockStatus = (jumlah) => {
                         </p>
                     </div>
                     <button
-                        v-if="user.role === 'admin'"
                         @click="openCreateModal"
                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
@@ -135,7 +134,7 @@ const getStockStatus = (jumlah) => {
                                             {{ stock.pupuk?.nama_pupuk || 'Unknown' }}
                                         </div>
                                         <div class="text-sm text-gray-500">
-                                            {{ stock.pupuk?.kategori_pupuk?.nama_kategori || 'Unknown' }}
+                                            {{ stock.pupuk?.kategori?.nama_kategori || 'Unknown' }}
                                         </div>
                                     </div>
                                 </td>
