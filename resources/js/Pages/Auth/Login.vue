@@ -188,7 +188,8 @@ const submit = () => {
                             </PrimaryButton>
                         </div>
 
-                        <div class="text-center border-t border-gray-200 pt-6">
+                        <!-- Register link di-hide untuk sistem internal -->
+                        <!-- <div class="text-center border-t border-gray-200 pt-6">
                             <p class="text-sm text-gray-600">
                                 Belum memiliki akun?
                                 <Link
@@ -198,7 +199,7 @@ const submit = () => {
                                     Daftar sebagai distributor
                                 </Link>
                             </p>
-                        </div>
+                        </div> -->
                     </form>
                 </div>
 

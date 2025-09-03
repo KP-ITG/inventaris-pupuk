@@ -4,6 +4,10 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PupukController;
 use App\Http\Controllers\Admin\StokController;
+use App\Http\Controllers\Admin\KategoriController;
+use App\Http\Controllers\Admin\NutrisiController;
+use App\Http\Controllers\Admin\DesaController;
+use App\Http\Controllers\Admin\DistribusiPupukController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
@@ -29,21 +33,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/users/{id}/reject', [UserController::class, 'reject'])->name('users.reject');
         Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
-        // Pupuk management
+        // Master data management
+        Route::resource('kategori', KategoriController::class);
+        Route::resource('nutrisi', NutrisiController::class);
         Route::resource('pupuk', PupukController::class);
+        Route::resource('desa', DesaController::class);
 
-        // Stock management for both admin and distributor
+        // Stock management (stok pusat)
         Route::get('/stok', [StokController::class, 'index'])->name('stok.index');
         Route::post('/stok', [StokController::class, 'store'])->name('stok.store');
         Route::patch('/stok/{id}', [StokController::class, 'update'])->name('stok.update');
         Route::delete('/stok/{id}', [StokController::class, 'destroy'])->name('stok.destroy');
-    });
 
-    // Distributor routes - access to stock management
-    Route::middleware('role:distributor')->prefix('distributor')->name('distributor.')->group(function () {
-        Route::get('/stok', [StokController::class, 'index'])->name('stok.index');
-        Route::post('/stok', [StokController::class, 'store'])->name('stok.store');
-        Route::patch('/stok/{id}', [StokController::class, 'update'])->name('stok.update');
+        // Distribusi pupuk management
+        Route::resource('distribusi-pupuk', DistribusiPupukController::class);
+        Route::patch('/distribusi-pupuk/{id}/update-status', [DistribusiPupukController::class, 'updateStatus'])->name('distribusi-pupuk.update-status');
     });
 });
 

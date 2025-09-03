@@ -9,7 +9,21 @@ const user = computed(() => page.props.auth?.user || {});
 
 const sidebarOpen = ref(false);
 
-const navigation = computed(() => {
+const pageTitle = computed(() => {
+    const url = page.url;
+
+    if (url === '/dashboard') return 'Dashboard';
+    if (url === '/admin/users') return 'Manajemen User';
+    if (url === '/admin/users/validations') return 'Validasi User';
+    if (url.startsWith('/admin/kategori')) return 'Kategori Pupuk';
+    if (url.startsWith('/admin/nutrisi')) return 'Nutrisi';
+    if (url.startsWith('/admin/pupuk')) return 'Manajemen Pupuk';
+    if (url.startsWith('/admin/desa')) return 'Data Desa';
+    if (url.startsWith('/admin/stok')) return 'Stok Pusat';
+    if (url.startsWith('/admin/distribusi-pupuk')) return 'Distribusi Pupuk';
+
+    return 'Dashboard';
+});const navigation = computed(() => {
     const mainNav = [
         {
             name: 'Dashboard',
@@ -41,25 +55,40 @@ const navigation = computed(() => {
 
         dataManagement.push(
             {
+                name: 'Kategori Pupuk',
+                href: '/admin/kategori',
+                icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
+                current: page.url.startsWith('/admin/kategori')
+            },
+            {
+                name: 'Nutrisi',
+                href: '/admin/nutrisi',
+                icon: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z',
+                current: page.url.startsWith('/admin/nutrisi')
+            },
+            {
                 name: 'Manajemen Pupuk',
                 href: '/admin/pupuk',
                 icon: 'M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z M16 8L2 22 M17.5 15H9',
                 current: page.url.startsWith('/admin/pupuk')
             },
             {
-                name: 'Manajemen Stok',
+                name: 'Data Desa',
+                href: '/admin/desa',
+                icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+                current: page.url.startsWith('/admin/desa')
+            },
+            {
+                name: 'Stok Pusat',
                 href: '/admin/stok',
                 icon: 'M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v2a1 1 0 01-1 1h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V8H3a1 1 0 01-1-1V5a1 1 0 011-1h4z',
                 current: page.url.startsWith('/admin/stok')
-            }
-        );
-    } else {
-        dataManagement.push(
+            },
             {
-                name: 'Stok Saya',
-                href: '/distributor/stok',
-                icon: 'M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v2a1 1 0 01-1 1h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V8H3a1 1 0 01-1-1V5a1 1 0 011-1h4z',
-                current: page.url.startsWith('/distributor/stok')
+                name: 'Distribusi Pupuk',
+                href: '/admin/distribusi-pupuk',
+                icon: 'M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2',
+                current: page.url.startsWith('/admin/distribusi-pupuk')
             }
         );
     }
@@ -220,7 +249,7 @@ const navigation = computed(() => {
                 </button>
                 <div class="flex-1 px-4 flex justify-between">
                     <div class="flex-1 flex items-center">
-                        <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+                        <h1 class="text-2xl font-semibold text-gray-900">{{ pageTitle }}</h1>
                     </div>
                     <div class="ml-4 flex items-center md:ml-6">
                         <!-- Profile dropdown -->

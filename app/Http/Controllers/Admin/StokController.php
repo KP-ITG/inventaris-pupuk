@@ -13,108 +13,80 @@ class StokController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        // Sistem stok pusat - hanya admin yang bisa akses
+        $stocks = Stok::with(['pupuk.kategori'])
+                      ->orderBy('updated_at', 'desc')
+                      ->get();
 
-        if ($user->role === 'admin') {
-            // Admin dapat melihat semua stok
-            $stocks = Stok::with(['pupuk.kategori', 'pengguna'])->get();
-            $users = Pengguna::where('role', 'distributor')->where('status', 'approved')->get();
-        } else {
-            // Distributor hanya melihat stok miliknya
-            $stocks = Stok::with(['pupuk.kategori'])
-                ->where('pengguna_id', $user->id)
-                ->get();
-            $users = [];
-        }
-
-        $pupuks = Pupuk::all();
+        // Ambil semua pupuk untuk keperluan edit
+        $allPupuks = Pupuk::with('kategori')
+                          ->orderBy('nama_pupuk')
+                          ->get();
 
         return Inertia::render('Admin/Stok', [
             'stocks' => $stocks,
-            'pupuks' => $pupuks,
-            'users' => $users,
-            'user' => $user,
+            'pupuks' => $allPupuks,
         ]);
     }
 
     public function store(Request $request)
     {
-        $user = auth()->user();
+        $request->validate([
+            'pupuk_id' => 'required|exists:pupuk,id',
+            'jumlah_stok' => 'required|numeric|min:0',
+            'stok_minimum' => 'nullable|numeric|min:0',
+            'stok_maksimum' => 'nullable|numeric|min:0',
+            'lokasi_gudang' => 'nullable|string|max:255',
+        ]);
 
-        if ($user->role === 'admin') {
-            $request->validate([
-                'pupuk_id' => 'required|exists:pupuk,id',
-                'pengguna_id' => 'required|exists:pengguna,id',
-                'jumlah_stok' => 'required|numeric|min:0',
-            ]);
+        // Cek apakah pupuk sudah ada di stok
+        $existingStock = Stok::where('pupuk_id', $request->pupuk_id)->first();
 
-            Stok::create([
-                'pupuk_id' => $request->pupuk_id,
-                'pengguna_id' => $request->pengguna_id,
-                'jumlah_stok' => $request->jumlah_stok,
-            ]);
-        } else {
-            // Distributor hanya bisa menambah stok untuk dirinya
-            $request->validate([
-                'pupuk_id' => 'required|exists:pupuk,id',
-                'jumlah_stok' => 'required|numeric|min:0',
-            ]);
-
-            Stok::create([
-                'pupuk_id' => $request->pupuk_id,
-                'pengguna_id' => $user->id,
-                'jumlah_stok' => $request->jumlah_stok,
-            ]);
+        if ($existingStock) {
+            return redirect()->back()->with('error', 'Stok untuk pupuk ini sudah ada. Gunakan fitur edit untuk mengubah jumlah.');
         }
+
+        $stok = Stok::create([
+            'pupuk_id' => $request->pupuk_id,
+            'jumlah_stok' => $request->jumlah_stok,
+            'stok_minimum' => $request->stok_minimum ?? 0,
+            'stok_maksimum' => $request->stok_maksimum ?? 0,
+            'lokasi_gudang' => $request->lokasi_gudang,
+        ]);
+
+        $stok->updateStatusStok();
 
         return redirect()->back()->with('success', 'Stok berhasil ditambahkan');
     }
 
     public function update(Request $request, $id)
     {
-        $user = auth()->user();
         $stock = Stok::findOrFail($id);
 
-        if ($user->role === 'admin') {
-            $request->validate([
-                'pupuk_id' => 'required|exists:pupuk,id',
-                'pengguna_id' => 'required|exists:pengguna,id',
-                'jumlah_stok' => 'required|numeric|min:0',
-            ]);
+        $request->validate([
+            'pupuk_id' => 'required|exists:pupuk,id',
+            'jumlah_stok' => 'required|numeric|min:0',
+            'stok_minimum' => 'nullable|numeric|min:0',
+            'stok_maksimum' => 'nullable|numeric|min:0',
+            'lokasi_gudang' => 'nullable|string|max:255',
+        ]);
 
-            $stock->update([
-                'pupuk_id' => $request->pupuk_id,
-                'pengguna_id' => $request->pengguna_id,
-                'jumlah_stok' => $request->jumlah_stok,
-            ]);
-        } else {
-            // Distributor hanya bisa update stok miliknya dan hanya jumlah
-            if ($stock->pengguna_id !== $user->id) {
-                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah stok ini');
-            }
+        $stock->update([
+            'pupuk_id' => $request->pupuk_id,
+            'jumlah_stok' => $request->jumlah_stok,
+            'stok_minimum' => $request->stok_minimum ?? 0,
+            'stok_maksimum' => $request->stok_maksimum ?? 0,
+            'lokasi_gudang' => $request->lokasi_gudang,
+        ]);
 
-            $request->validate([
-                'jumlah_stok' => 'required|numeric|min:0',
-            ]);
+        $stock->updateStatusStok();
 
-            $stock->update([
-                'jumlah_stok' => $request->jumlah_stok,
-            ]);
-        }
-
-        return redirect()->back()->with('success', 'Stok berhasil diupdate');
+        return redirect()->back()->with('success', 'Stok berhasil diperbarui');
     }
 
     public function destroy($id)
     {
-        $user = auth()->user();
         $stock = Stok::findOrFail($id);
-
-        // Hanya admin yang bisa menghapus stok
-        if ($user->role !== 'admin') {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus stok');
-        }
-
         $stock->delete();
 
         return redirect()->back()->with('success', 'Stok berhasil dihapus');

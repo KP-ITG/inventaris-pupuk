@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Pengguna;
 use App\Models\Pupuk;
 use App\Models\Stok;
-use App\Models\TransaksiDistribusi;
+use App\Models\DistribusiPupuk;
+use App\Models\Desa;
+use App\Models\KategoriPupuk;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -16,67 +18,65 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->role === 'admin') {
-            return $this->adminDashboard();
-        } else {
-            return $this->distributorDashboard();
-        }
+        // Sistem sekarang hanya untuk admin (dinas pertanian internal)
+        return $this->adminDashboard();
     }
 
     private function adminDashboard()
     {
+        // Statistik utama sistem dinas pertanian
         $stats = [
-            'total_users' => Pengguna::count(),
-            'pending_users' => Pengguna::where('status', 'pending')->count(),
             'total_pupuk' => Pupuk::count(),
             'total_stok' => Stok::sum('jumlah_stok'),
-            'total_transaksi' => TransaksiDistribusi::count(),
+            'total_distribusi' => DistribusiPupuk::count(),
+            'total_desa' => Desa::count(),
+            'kategori_pupuk' => KategoriPupuk::count(),
+            'distribusi_bulan_ini' => DistribusiPupuk::whereMonth('created_at', now()->month)
+                                                   ->whereYear('created_at', now()->year)
+                                                   ->count(),
+            'stok_terdistribusi_bulan_ini' => DistribusiPupuk::whereMonth('created_at', now()->month)
+                                                            ->whereYear('created_at', now()->year)
+                                                            ->where('status_distribusi', 'selesai')
+                                                            ->sum('jumlah_distribusi'),
+            'distribusi_pending' => DistribusiPupuk::where('status_distribusi', 'rencana')->count(),
         ];
 
-        $recentUsers = Pengguna::where('status', 'pending')
+        // Stok pupuk yang rendah (kurang dari 100 kg)
+        $lowStock = Stok::with(['pupuk.kategori'])
+            ->where('jumlah_stok', '<', 100)
+            ->orderBy('jumlah_stok', 'asc')
+            ->take(5)
+            ->get();
+
+        // Distribusi terbaru
+        $recentDistribusi = DistribusiPupuk::with(['pupuk', 'desa'])
             ->latest()
             ->take(5)
             ->get();
 
-        $lowStock = Stok::with(['pupuk', 'pengguna'])
-            ->where('jumlah_stok', '<', 10)
+        // Statistik status distribusi
+        $statusStats = [
+            'rencana' => DistribusiPupuk::where('status_distribusi', 'rencana')->count(),
+            'dalam_perjalanan' => DistribusiPupuk::where('status_distribusi', 'dalam_perjalanan')->count(),
+            'selesai' => DistribusiPupuk::where('status_distribusi', 'selesai')->count(),
+            'batal' => DistribusiPupuk::where('status_distribusi', 'batal')->count(),
+        ];
+
+        // Top 5 desa dengan distribusi terbanyak
+        $topDesa = DistribusiPupuk::with('desa')
+            ->selectRaw('desa_id, COUNT(*) as total_distribusi, SUM(jumlah_distribusi) as total_pupuk')
+            ->groupBy('desa_id')
+            ->orderByDesc('total_distribusi')
             ->take(5)
             ->get();
 
         return Inertia::render('Dashboard', [
             'user' => auth()->user(),
             'stats' => $stats,
-            'recentUsers' => $recentUsers,
+            'statusStats' => $statusStats,
             'lowStock' => $lowStock,
-        ]);
-    }
-
-    private function distributorDashboard()
-    {
-        $user = auth()->user();
-
-        $myStocks = Stok::with('pupuk')
-            ->where('pengguna_id', $user->id)
-            ->get();
-
-        $myTransactions = TransaksiDistribusi::with('pupuk')
-            ->where('pengguna_id', $user->id)
-            ->latest()
-            ->take(10)
-            ->get();
-
-        $stats = [
-            'total_stok' => $myStocks->sum('jumlah_stok'),
-            'jenis_pupuk' => $myStocks->count(),
-            'total_transaksi' => $myTransactions->count(),
-            'stok_rendah' => $myStocks->where('jumlah_stok', '<', 10)->count(),
-        ];
-
-        return Inertia::render('Dashboard', [
-            'user' => auth()->user(),
-            'stats' => $stats,
-            'myStocks' => $myStocks,
-            'myTransactions' => $myTransactions,
+            'recentDistribusi' => $recentDistribusi,
+            'topDesa' => $topDesa,
         ]);
     }
 }

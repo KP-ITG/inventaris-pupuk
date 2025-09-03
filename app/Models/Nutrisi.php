@@ -11,6 +11,7 @@ class Nutrisi extends Model
 
     protected $fillable = [
         'nama_nutrisi',
+        'satuan',
         'formula_kimia',
         'deskripsi_nutrisi'
     ];
