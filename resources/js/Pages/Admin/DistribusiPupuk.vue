@@ -4,15 +4,33 @@
             <!-- Header -->
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold text-gray-900">Distribusi Pupuk ke Desa</h1>
-                <Link
-                    :href="route('admin.distribusi-pupuk.create')"
-                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center"
-                >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Tambah Distribusi
-                </Link>
+                <div class="flex space-x-2">
+                    <a :href="route('admin.distribusi-pupuk.export-excel')" target="_blank"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Excel
+                    </a>
+                    <a :href="route('admin.distribusi-pupuk.export-pdf')" target="_blank"
+                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        PDF
+                    </a>
+                    <Link
+                        :href="route('admin.distribusi-pupuk.create')"
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Tambah Distribusi
+                    </Link>
+                </div>
             </div>
 
             <!-- Summary Cards -->

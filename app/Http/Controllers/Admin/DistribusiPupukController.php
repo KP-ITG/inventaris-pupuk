@@ -10,6 +10,9 @@ use App\Models\Stok;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use App\Exports\DistribusiExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Services\PdfExportService;
 
 class DistribusiPupukController extends Controller
 {
@@ -221,5 +224,33 @@ class DistribusiPupukController extends Controller
         $distribusiPupuk->update(['status_distribusi' => $statusBaru]);
 
         return response()->json(['message' => 'Status berhasil diupdate']);
+    }
+
+    /**
+     * Export data distribusi pupuk to Excel
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function exportExcel()
+    {
+        return Excel::download(new DistribusiExport(), 'daftar-distribusi-pupuk.xlsx');
+    }
+
+    /**
+     * Export data distribusi pupuk to PDF
+     * 
+     * @param \App\Services\PdfExportService $pdfService
+     * @return \Illuminate\Http\Response
+     */
+    public function exportPdf(PdfExportService $pdfService)
+    {
+        $export = new DistribusiExport();
+        
+        return $pdfService->export(
+            'Daftar Distribusi Pupuk',
+            $export->headings(),
+            $export->collection(),
+            'daftar-distribusi-pupuk'
+        );
     }
 }

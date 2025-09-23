@@ -35,19 +35,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Master data management
         Route::resource('kategori', KategoriController::class);
+        Route::get('/kategori/export/excel', [KategoriController::class, 'exportExcel'])->name('kategori.export-excel');
+        Route::get('/kategori/export/pdf', [KategoriController::class, 'exportPdf'])->name('kategori.export-pdf');
+        
         Route::resource('nutrisi', NutrisiController::class);
+        Route::get('/nutrisi/export/excel', [NutrisiController::class, 'exportExcel'])->name('nutrisi.export-excel');
+        Route::get('/nutrisi/export/pdf', [NutrisiController::class, 'exportPdf'])->name('nutrisi.export-pdf');
+        
         Route::resource('pupuk', PupukController::class);
+        Route::get('/pupuk/export/excel', [PupukController::class, 'exportExcel'])->name('pupuk.export-excel');
+        Route::get('/pupuk/export/pdf', [PupukController::class, 'exportPdf'])->name('pupuk.export-pdf');
+        
         Route::resource('desa', DesaController::class);
+        Route::get('/desa/export/excel', [DesaController::class, 'exportExcel'])->name('desa.export-excel');
+        Route::get('/desa/export/pdf', [DesaController::class, 'exportPdf'])->name('desa.export-pdf');
 
         // Stock management (stok pusat)
         Route::get('/stok', [StokController::class, 'index'])->name('stok.index');
         Route::post('/stok', [StokController::class, 'store'])->name('stok.store');
         Route::patch('/stok/{id}', [StokController::class, 'update'])->name('stok.update');
         Route::delete('/stok/{id}', [StokController::class, 'destroy'])->name('stok.destroy');
+        Route::get('/stok/export/excel', [StokController::class, 'exportExcel'])->name('stok.export-excel');
+        Route::get('/stok/export/pdf', [StokController::class, 'exportPdf'])->name('stok.export-pdf');
 
         // Distribusi pupuk management
         Route::resource('distribusi-pupuk', DistribusiPupukController::class);
         Route::patch('/distribusi-pupuk/{id}/update-status', [DistribusiPupukController::class, 'updateStatus'])->name('distribusi-pupuk.update-status');
+        Route::get('/distribusi-pupuk/export/excel', [DistribusiPupukController::class, 'exportExcel'])->name('distribusi-pupuk.export-excel');
+        Route::get('/distribusi-pupuk/export/pdf', [DistribusiPupukController::class, 'exportPdf'])->name('distribusi-pupuk.export-pdf');
     });
 });
 

@@ -8,6 +8,9 @@ use App\Models\KategoriPupuk;
 use App\Models\Nutrisi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Exports\PupukExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Services\PdfExportService;
 
 class PupukController extends Controller
 {
@@ -106,5 +109,33 @@ class PupukController extends Controller
 
         // Return proper Inertia response
         return redirect()->route('admin.pupuk.index')->with('success', 'Pupuk berhasil dihapus');
+    }
+
+    /**
+     * Export data pupuk to Excel
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function exportExcel()
+    {
+        return Excel::download(new PupukExport(), 'daftar-pupuk.xlsx');
+    }
+
+    /**
+     * Export data pupuk to PDF
+     * 
+     * @param \App\Services\PdfExportService $pdfService
+     * @return \Illuminate\Http\Response
+     */
+    public function exportPdf(PdfExportService $pdfService)
+    {
+        $export = new PupukExport();
+        
+        return $pdfService->export(
+            'Daftar Pupuk',
+            $export->headings(),
+            $export->collection(),
+            'daftar-pupuk'
+        );
     }
 }

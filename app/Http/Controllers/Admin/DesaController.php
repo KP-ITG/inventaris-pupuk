@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Desa;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Exports\DesaExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Services\PdfExportService;
 
 class DesaController extends Controller
 {
@@ -99,5 +102,33 @@ class DesaController extends Controller
 
         return redirect()->route('admin.desa.index')
                         ->with('success', 'Data desa berhasil dihapus');
+    }
+
+    /**
+     * Export data desa to Excel
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function exportExcel()
+    {
+        return Excel::download(new DesaExport(), 'daftar-desa.xlsx');
+    }
+
+    /**
+     * Export data desa to PDF
+     * 
+     * @param \App\Services\PdfExportService $pdfService
+     * @return \Illuminate\Http\Response
+     */
+    public function exportPdf(PdfExportService $pdfService)
+    {
+        $export = new DesaExport();
+        
+        return $pdfService->export(
+            'Daftar Desa',
+            $export->headings(),
+            $export->collection(),
+            'daftar-desa'
+        );
     }
 }

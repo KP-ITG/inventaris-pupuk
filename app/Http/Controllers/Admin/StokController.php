@@ -8,6 +8,9 @@ use App\Models\Pupuk;
 use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Exports\StokExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Services\PdfExportService;
 
 class StokController extends Controller
 {
@@ -90,5 +93,33 @@ class StokController extends Controller
         $stock->delete();
 
         return redirect()->back()->with('success', 'Stok berhasil dihapus');
+    }
+
+    /**
+     * Export data stok to Excel
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function exportExcel()
+    {
+        return Excel::download(new StokExport(), 'daftar-stok-pupuk.xlsx');
+    }
+
+    /**
+     * Export data stok to PDF
+     * 
+     * @param \App\Services\PdfExportService $pdfService
+     * @return \Illuminate\Http\Response
+     */
+    public function exportPdf(PdfExportService $pdfService)
+    {
+        $export = new StokExport();
+        
+        return $pdfService->export(
+            'Daftar Stok Pupuk',
+            $export->headings(),
+            $export->collection(),
+            'daftar-stok-pupuk'
+        );
     }
 }

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Nutrisi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Exports\NutrisiExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Services\PdfExportService;
 
 class NutrisiController extends Controller
 {
@@ -64,5 +67,33 @@ class NutrisiController extends Controller
         $nutrisi->delete();
 
         return redirect()->back()->with('success', 'Nutrisi berhasil dihapus');
+    }
+
+    /**
+     * Export data nutrisi to Excel
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function exportExcel()
+    {
+        return Excel::download(new NutrisiExport(), 'daftar-nutrisi.xlsx');
+    }
+
+    /**
+     * Export data nutrisi to PDF
+     * 
+     * @param \App\Services\PdfExportService $pdfService
+     * @return \Illuminate\Http\Response
+     */
+    public function exportPdf(PdfExportService $pdfService)
+    {
+        $export = new NutrisiExport();
+        
+        return $pdfService->export(
+            'Daftar Nutrisi',
+            $export->headings(),
+            $export->collection(),
+            'daftar-nutrisi'
+        );
     }
 }

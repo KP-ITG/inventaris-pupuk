@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\KategoriPupuk;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Exports\KategoriExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Services\PdfExportService;
 
 class KategoriController extends Controller
 {
@@ -58,5 +61,33 @@ class KategoriController extends Controller
         $kategori->delete();
 
         return redirect()->back()->with('success', 'Kategori berhasil dihapus');
+    }
+
+    /**
+     * Export data kategori to Excel
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function exportExcel()
+    {
+        return Excel::download(new KategoriExport(), 'daftar-kategori-pupuk.xlsx');
+    }
+
+    /**
+     * Export data kategori to PDF
+     * 
+     * @param \App\Services\PdfExportService $pdfService
+     * @return \Illuminate\Http\Response
+     */
+    public function exportPdf(PdfExportService $pdfService)
+    {
+        $export = new KategoriExport();
+        
+        return $pdfService->export(
+            'Daftar Kategori Pupuk',
+            $export->headings(),
+            $export->collection(),
+            'daftar-kategori-pupuk'
+        );
     }
 }
