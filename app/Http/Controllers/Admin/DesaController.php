@@ -59,7 +59,7 @@ class DesaController extends Controller
     public function edit(Desa $desa)
     {
         $desa->loadCount('distribusiPupuk');
-        
+
         return Inertia::render('Admin/Desa/Edit', [
             'desa' => $desa
         ]);

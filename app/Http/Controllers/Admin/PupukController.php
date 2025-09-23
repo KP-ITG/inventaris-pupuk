@@ -93,12 +93,18 @@ class PupukController extends Controller
         $pupuk = Pupuk::findOrFail($id);
 
         // Check if pupuk is used in stock
-        if ($pupuk->stok()->count() > 0) {
-            return redirect()->back()->with('error', 'Pupuk tidak dapat dihapus karena masih digunakan dalam stok');
+        if ($pupuk->stok) {
+            return back()->withErrors(['error' => 'Pupuk tidak dapat dihapus karena masih ada stok tersedia']);
+        }
+
+        // Check if pupuk is used in distributions
+        if ($pupuk->distribusiPupuk()->count() > 0) {
+            return back()->withErrors(['error' => 'Pupuk tidak dapat dihapus karena sudah pernah didistribusikan']);
         }
 
         $pupuk->delete();
 
-        return redirect()->back()->with('success', 'Pupuk berhasil dihapus');
+        // Return proper Inertia response
+        return redirect()->route('admin.pupuk.index')->with('success', 'Pupuk berhasil dihapus');
     }
 }

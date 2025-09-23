@@ -256,15 +256,15 @@
                                 :disabled="desa.distribusi_pupuk_count > 0"
                                 :class="[
                                     'flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2',
-                                    desa.distribusi_pupuk_count > 0 
-                                        ? 'text-gray-400 bg-gray-200 cursor-not-allowed' 
+                                    desa.distribusi_pupuk_count > 0
+                                        ? 'text-gray-400 bg-gray-200 cursor-not-allowed'
                                         : 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500'
                                 ]"
                             >
                                 Hapus
                             </button>
                         </div>
-                        
+
                         <div v-if="desa.distribusi_pupuk_count > 0" class="mt-2">
                             <p class="text-sm text-gray-500">
                                 <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">

@@ -75,4 +75,12 @@ class Pupuk extends Model
     {
         return $this->hasMany(TransaksiDistribusi::class, 'pupuk_id');
     }
+
+    /**
+     * Relasi ke tabel distribusi pupuk
+     */
+    public function distribusiPupuk(): HasMany
+    {
+        return $this->hasMany(DistribusiPupuk::class, 'pupuk_id');
+    }
 }

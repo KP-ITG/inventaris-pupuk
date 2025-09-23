@@ -129,7 +129,7 @@ const submit = () => {
                             <TextInput
                                 id="email"
                                 type="email"
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 px-4 py-3"
+                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 focus:ring-opacity-50 px-4 py-3 transition-colors"
                                 v-model="form.email"
                                 required
                                 autofocus
@@ -144,7 +144,7 @@ const submit = () => {
                             <TextInput
                                 id="password"
                                 type="password"
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 px-4 py-3"
+                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 focus:ring-opacity-50 px-4 py-3 transition-colors"
                                 v-model="form.password"
                                 required
                                 autocomplete="current-password"
@@ -158,7 +158,7 @@ const submit = () => {
                                 <Checkbox
                                     name="remember"
                                     v-model:checked="form.remember"
-                                    class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                    class="h-4 w-4"
                                 />
                                 <span class="ml-3 text-sm text-gray-600">Ingat saya</span>
                             </div>

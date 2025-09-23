@@ -14,10 +14,10 @@ const pageTitle = computed(() => {
 
     if (url === '/dashboard') return 'Dashboard';
     if (url === '/admin/users') return 'Manajemen User';
-    if (url === '/admin/users/validations') return 'Validasi User';
+    // if (url === '/admin/users/validations') return 'Validasi User';
     if (url.startsWith('/admin/kategori')) return 'Kategori Pupuk';
     if (url.startsWith('/admin/nutrisi')) return 'Nutrisi';
-    if (url.startsWith('/admin/pupuk')) return 'Manajemen Pupuk';
+    if (url.startsWith('/admin/pupuk')) return 'Pupuk';
     if (url.startsWith('/admin/desa')) return 'Data Desa';
     if (url.startsWith('/admin/stok')) return 'Stok Pusat';
     if (url.startsWith('/admin/distribusi-pupuk')) return 'Distribusi Pupuk';
@@ -45,12 +45,12 @@ const pageTitle = computed(() => {
                 icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z',
                 current: page.url === '/admin/users'
             },
-            {
-                name: 'Validasi User',
-                href: '/admin/users/validations',
-                icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-                current: page.url === '/admin/users/validations'
-            }
+            // {
+            //     name: 'Validasi User',
+            //     href: '/admin/users/validations',
+            //     icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+            //     current: page.url === '/admin/users/validations'
+            // }
         );
 
         dataManagement.push(
@@ -67,7 +67,7 @@ const pageTitle = computed(() => {
                 current: page.url.startsWith('/admin/nutrisi')
             },
             {
-                name: 'Manajemen Pupuk',
+                name: 'Pupuk',
                 href: '/admin/pupuk',
                 icon: 'M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z M16 8L2 22 M17.5 15H9',
                 current: page.url.startsWith('/admin/pupuk')

@@ -87,8 +87,21 @@ const submitForm = () => {
 
 const deletePupuk = (id) => {
     if (confirm('Apakah Anda yakin ingin menghapus pupuk ini?')) {
-        router.delete(`/admin/pupuk/${id}`, {
-            preserveScroll: true,
+        router.delete(route('admin.pupuk.destroy', id), {
+            preserveScroll: false,
+            preserveState: false,
+            replace: true,
+            onSuccess: () => {
+                console.log('Pupuk berhasil dihapus');
+            },
+            onError: (errors) => {
+                console.error('Error deleting pupuk:', errors);
+                if (errors.error) {
+                    alert(errors.error);
+                } else {
+                    alert('Gagal menghapus pupuk. Silakan coba lagi.');
+                }
+            }
         });
     }
 };
@@ -113,7 +126,7 @@ const closeModal = () => {
                     </div>
                     <button
                         @click="openCreateModal"
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                     >
                         <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -225,7 +238,7 @@ const closeModal = () => {
                                     v-model="form.nama_pupuk"
                                     type="text"
                                     id="nama_pupuk"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                                     placeholder="Masukkan nama pupuk"
                                 />
                             </div>
@@ -235,7 +248,7 @@ const closeModal = () => {
                                 <select
                                     v-model="form.kategori_id"
                                     id="kategori_id"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                                 >
                                     <option value="">Pilih Kategori</option>
                                     <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -250,7 +263,7 @@ const closeModal = () => {
                                     v-model="form.harga_jual"
                                     type="number"
                                     id="harga_jual"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                                     placeholder="0"
                                 />
                             </div>
@@ -261,7 +274,7 @@ const closeModal = () => {
                                     v-model="form.deskripsi"
                                     id="deskripsi"
                                     rows="3"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                                     placeholder="Deskripsi pupuk..."
                                 ></textarea>
                             </div>
@@ -286,7 +299,7 @@ const closeModal = () => {
                                 <div v-for="(nutrisi, index) in form.nutrisi" :key="index" class="flex gap-2 mb-2">
                                     <select
                                         v-model="nutrisi.nutrisi_id"
-                                        class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                        class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 text-sm"
                                     >
                                         <option value="">Pilih Nutrisi</option>
                                         <option v-for="n in nutrisiList" :key="n.id" :value="n.id">
@@ -300,7 +313,7 @@ const closeModal = () => {
                                         min="0"
                                         max="100"
                                         placeholder="0.00"
-                                        class="w-20 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                        class="w-20 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 text-sm"
                                     />
                                     <span class="self-center text-sm text-gray-500">%</span>
                                     <button
@@ -320,14 +333,14 @@ const closeModal = () => {
                             @click="submitForm"
                             :disabled="processing"
                             type="button"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
                         >
                             {{ processing ? 'Loading...' : (editMode ? 'Update' : 'Simpan') }}
                         </button>
                         <button
                             @click="closeModal"
                             type="button"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                         >
                             Batal
                         </button>
@@ -402,7 +415,7 @@ const closeModal = () => {
                         <button
                             @click="showDetailModal = false"
                             type="button"
-                            class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm"
+                            class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:w-auto sm:text-sm"
                         >
                             Tutup
                         </button>
