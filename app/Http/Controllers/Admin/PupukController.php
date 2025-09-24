@@ -11,9 +11,24 @@ use Inertia\Inertia;
 
 class PupukController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pupuks = Pupuk::with(['kategori', 'nutrisi'])->get();
+        $query = Pupuk::with(['kategori', 'nutrisi']);
+
+        // Search functionality
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_pupuk', 'like', '%' . $request->search . '%')
+                  ->orWhere('deskripsi', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('kategori', function ($q) use ($request) {
+                      $q->where('nama_kategori', 'like', '%' . $request->search . '%');
+                  });
+            });
+        }
+
+        $perPage = $request->per_page ?? 10;
+        $pupuks = $query->paginate($perPage)->withQueryString();
+
         $categories = KategoriPupuk::all();
         $nutrisiList = Nutrisi::all();
 
@@ -21,6 +36,10 @@ class PupukController extends Controller
             'pupuks' => $pupuks,
             'categories' => $categories,
             'nutrisiList' => $nutrisiList,
+            'filters' => [
+                'search' => $request->search,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -106,5 +125,65 @@ class PupukController extends Controller
 
         // Return proper Inertia response
         return redirect()->route('admin.pupuk.index')->with('success', 'Pupuk berhasil dihapus');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = Pupuk::with(['kategori', 'nutrisi']);
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_pupuk', 'like', '%' . $request->search . '%')
+                  ->orWhere('deskripsi', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('kategori', function ($q) use ($request) {
+                      $q->where('nama_kategori', 'like', '%' . $request->search . '%');
+                  });
+            });
+        }
+
+        $pupuks = $query->get();
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('pdf.pupuk', compact('pupuks'));
+
+        return $pdf->download('data-pupuk.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $query = Pupuk::with(['kategori', 'nutrisi']);
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_pupuk', 'like', '%' . $request->search . '%')
+                  ->orWhere('deskripsi', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('kategori', function ($q) use ($request) {
+                      $q->where('nama_kategori', 'like', '%' . $request->search . '%');
+                  });
+            });
+        }
+
+        $pupuks = $query->get();
+
+        $excelService = app(\App\Services\ExcelExportService::class);
+
+        $headers = ['No', 'Nama Pupuk', 'Kategori', 'Harga Jual', 'Kandungan Nutrisi', 'Deskripsi'];
+
+        $data = $pupuks->map(function ($pupuk, $index) {
+            $nutrisi = $pupuk->nutrisi->map(function ($n) {
+                return $n->nama_nutrisi . ' (' . $n->pivot->kandungan_persen . '%)';
+            })->implode(', ');
+
+            return [
+                $index + 1,
+                $pupuk->nama_pupuk,
+                $pupuk->kategori->nama_kategori ?? '-',
+                'Rp ' . number_format($pupuk->harga_jual, 0, ',', '.'),
+                $nutrisi ?: '-',
+                $pupuk->deskripsi ?: '-'
+            ];
+        })->toArray();
+
+        return $excelService->export('Data Pupuk', $headers, $data, 'data-pupuk.xlsx');
     }
 }

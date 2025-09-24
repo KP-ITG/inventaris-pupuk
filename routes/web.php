@@ -35,9 +35,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Master data management
         Route::resource('kategori', KategoriController::class);
+        Route::get('/kategori/export/pdf', [KategoriController::class, 'exportPdf'])->name('kategori.export.pdf');
+        Route::get('/kategori/export/excel', [KategoriController::class, 'exportExcel'])->name('kategori.export.excel');
+
         Route::resource('nutrisi', NutrisiController::class);
+        Route::get('/nutrisi/export/pdf', [NutrisiController::class, 'exportPdf'])->name('nutrisi.export.pdf');
+        Route::get('/nutrisi/export/excel', [NutrisiController::class, 'exportExcel'])->name('nutrisi.export.excel');
         Route::resource('pupuk', PupukController::class);
+        Route::get('/pupuk/export/pdf', [PupukController::class, 'exportPdf'])->name('pupuk.export.pdf');
+        Route::get('/pupuk/export/excel', [PupukController::class, 'exportExcel'])->name('pupuk.export.excel');
+
         Route::resource('desa', DesaController::class);
+        Route::get('/desa/export/pdf', [DesaController::class, 'exportPdf'])->name('desa.export.pdf');
+        Route::get('/desa/export/excel', [DesaController::class, 'exportExcel'])->name('desa.export.excel');
 
         // Stock management (stok pusat)
         Route::get('/stok', [StokController::class, 'index'])->name('stok.index');

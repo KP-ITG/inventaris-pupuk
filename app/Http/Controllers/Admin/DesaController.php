@@ -9,14 +9,28 @@ use Inertia\Inertia;
 
 class DesaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $desa = Desa::withCount('distribusiPupuk')
-                   ->orderBy('nama_desa')
-                   ->get();
+        $query = Desa::withCount('distribusiPupuk')->orderBy('nama_desa');
+
+        // Search functionality
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_desa', 'like', '%' . $request->search . '%')
+                  ->orWhere('kecamatan', 'like', '%' . $request->search . '%')
+                  ->orWhere('kabupaten', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $perPage = $request->per_page ?? 10;
+        $desa = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Desa', [
-            'desa' => $desa
+            'desa' => $desa,
+            'filters' => [
+                'search' => $request->search,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -99,5 +113,57 @@ class DesaController extends Controller
 
         return redirect()->route('admin.desa.index')
                         ->with('success', 'Data desa berhasil dihapus');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = Desa::withCount('distribusiPupuk')->orderBy('nama_desa');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_desa', 'like', '%' . $request->search . '%')
+                  ->orWhere('kecamatan', 'like', '%' . $request->search . '%')
+                  ->orWhere('kabupaten', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $desa = $query->get();
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('pdf.desa', compact('desa'));
+
+        return $pdf->download('data-desa.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $query = Desa::withCount('distribusiPupuk')->orderBy('nama_desa');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_desa', 'like', '%' . $request->search . '%')
+                  ->orWhere('kecamatan', 'like', '%' . $request->search . '%')
+                  ->orWhere('kabupaten', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $desa = $query->get();
+
+        $excelService = app(\App\Services\ExcelExportService::class);
+
+        $headers = ['No', 'Nama Desa', 'Kecamatan', 'Kabupaten', 'Jumlah Distribusi', 'Status'];
+
+        $data = $desa->map(function ($item, $index) {
+            return [
+                $index + 1,
+                $item->nama_desa,
+                $item->kecamatan,
+                $item->kabupaten,
+                $item->distribusi_pupuk_count . ' distribusi',
+                ucfirst($item->status)
+            ];
+        })->toArray();
+
+        return $excelService->export('Data Desa', $headers, $data, 'data-desa.xlsx');
     }
 }

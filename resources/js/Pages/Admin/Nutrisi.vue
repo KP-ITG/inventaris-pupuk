@@ -3,12 +3,56 @@
         <div class="py-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="bg-white rounded-lg shadow">
+                    <!-- Header -->
                     <div class="px-6 py-4 border-b border-gray-200">
                         <div class="flex justify-between items-center">
                             <h2 class="text-lg font-medium text-gray-900">Manajemen Nutrisi</h2>
-                            <button @click="openModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                                Tambah Nutrisi
-                            </button>
+                            <div class="flex items-center space-x-2">
+                                <button
+                                    @click="exportPdf"
+                                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >
+                                    PDF
+                                </button>
+                                <button
+                                    @click="exportExcel"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >
+                                    Excel
+                                </button>
+                                <button @click="openModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                                    Tambah Nutrisi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filters -->
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <div class="flex-1 max-w-md">
+                                <input
+                                    v-model="searchQuery"
+                                    @input="debouncedSearch"
+                                    type="text"
+                                    placeholder="Cari nutrisi..."
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm"
+                                />
+                            </div>
+                            <div class="flex items-center space-x-2 ml-4">
+                                <span class="text-sm text-gray-700">Tampilkan:</span>
+                                <select
+                                    v-model="perPageSelected"
+                                    @change="changePerPage"
+                                    class="border border-gray-300 rounded-md text-sm px-2 py-1"
+                                >
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="text-sm text-gray-700">data</span>
+                            </div>
                         </div>
                     </div>
 
@@ -35,7 +79,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="item in nutrisi" :key="item.id">
+                                    <tr v-for="item in nutrisi.data" :key="item.id">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.nama_nutrisi }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.satuan }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.formula_kimia || '-' }}</td>
@@ -51,6 +95,51 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-if="!nutrisi.data || nutrisi.data.length === 0" class="text-center py-12">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada nutrisi</h3>
+                            <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan nutrisi baru.</p>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div v-if="nutrisi.last_page > 1" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm text-gray-700">
+                                    Menampilkan {{ nutrisi.from || 0 }} sampai {{ nutrisi.to || 0 }} dari {{ nutrisi.total || 0 }} data
+                                </div>
+                                <div class="flex space-x-1">
+                                    <button
+                                        @click="goToPage(nutrisi.current_page - 1)"
+                                        :disabled="!nutrisi.prev_page_url"
+                                        class="px-3 py-1 text-sm border rounded-md"
+                                        :class="nutrisi.prev_page_url ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'"
+                                    >
+                                        Prev
+                                    </button>
+                                    <button
+                                        v-for="page in visiblePages"
+                                        :key="page"
+                                        @click="goToPage(page)"
+                                        class="px-3 py-1 text-sm border rounded-md"
+                                        :class="page === nutrisi.current_page ? 'bg-green-50 border-green-500 text-green-600' : 'hover:bg-gray-50'"
+                                    >
+                                        {{ page }}
+                                    </button>
+                                    <button
+                                        @click="goToPage(nutrisi.current_page + 1)"
+                                        :disabled="!nutrisi.next_page_url"
+                                        class="px-3 py-1 text-sm border rounded-md"
+                                        :class="nutrisi.next_page_url ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -132,18 +221,23 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { ref, reactive, computed } from 'vue'
+import { useForm, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 
 const props = defineProps({
-    nutrisi: Array
+    nutrisi: Object,
+    filters: Object,
 })
 
 const showModal = ref(false)
 const isEditing = ref(false)
 const currentNutrisi = ref(null)
 const processing = ref(false)
+
+// Search and pagination
+const searchQuery = ref(props.filters?.search || '')
+const perPageSelected = ref(props.filters?.per_page || 10)
 
 const form = reactive({
     nama_nutrisi: '',
@@ -215,4 +309,69 @@ const deleteNutrisi = (nutrisi) => {
         formData.delete(`/admin/nutrisi/${nutrisi.id}`)
     }
 }
+
+// Search and pagination functions
+const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+};
+
+const debouncedSearch = debounce(() => {
+    updateUrl({ search: searchQuery.value, page: 1 });
+}, 300);
+
+const changePerPage = () => {
+    updateUrl({ per_page: perPageSelected.value, page: 1 });
+};
+
+const goToPage = (page) => {
+    if (page >= 1 && page <= props.nutrisi.last_page) {
+        updateUrl({ page });
+    }
+};
+
+const updateUrl = (params) => {
+    const currentParams = new URLSearchParams(window.location.search);
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+            currentParams.set(key, value);
+        } else {
+            currentParams.delete(key);
+        }
+    });
+
+    router.get(`${window.location.pathname}?${currentParams.toString()}`, {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+// Export functions
+const exportPdf = () => {
+    window.open(`/admin/nutrisi/export/pdf?search=${searchQuery.value}`, '_blank');
+};
+
+const exportExcel = () => {
+    window.open(`/admin/nutrisi/export/excel?search=${searchQuery.value}`, '_blank');
+};
+
+// Pagination computed
+const visiblePages = computed(() => {
+    const current = props.nutrisi.current_page;
+    const last = props.nutrisi.last_page;
+    const pages = [];
+
+    const start = Math.max(1, current - 2);
+    const end = Math.min(last, current + 2);
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return pages;
+});
 </script>

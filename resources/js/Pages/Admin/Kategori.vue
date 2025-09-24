@@ -3,16 +3,63 @@
         <div class="py-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="bg-white rounded-lg shadow">
+                    <!-- Header -->
                     <div class="px-6 py-4 border-b border-gray-200">
                         <div class="flex justify-between items-center">
                             <h2 class="text-lg font-medium text-gray-900">Manajemen Kategori Pupuk</h2>
-                            <button @click="openModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                                Tambah Kategori
-                            </button>
+                            <div class="flex items-center space-x-2">
+                                <button
+                                    @click="exportPdf"
+                                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >
+                                    PDF
+                                </button>
+                                <button
+                                    @click="exportExcel"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >
+                                    Excel
+                                </button>
+                                <button
+                                    @click="openModal()"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                                >
+                                    Tambah Kategori
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Success/Error Messages -->
+                    <!-- Search and Filters -->
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <div class="flex-1 max-w-md">
+                                <input
+                                    v-model="searchQuery"
+                                    @input="debouncedSearch"
+                                    type="text"
+                                    placeholder="Cari kategori atau deskripsi..."
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm"
+                                />
+                            </div>
+                            <div class="flex items-center space-x-2 ml-4">
+                                <span class="text-sm text-gray-700">Tampilkan:</span>
+                                <select
+                                    v-model="perPageSelected"
+                                    @change="changePerPage"
+                                    class="border border-gray-300 rounded-md text-sm px-2 py-1"
+                                >
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="text-sm text-gray-700">data</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flash Messages -->
                     <div v-if="$page.props.flash?.success" class="mx-6 mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
                         <p class="text-green-700">{{ $page.props.flash.success }}</p>
                     </div>
@@ -21,32 +68,80 @@
                     </div>
 
                     <!-- Table -->
-                    <div class="px-6 py-4">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kategori</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Pupuk</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="item in kategori" :key="item.id">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.nama_kategori }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.deskripsi || '-' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.pupuk_count || 0 }} pupuk</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button @click="openModal(item)" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
-                                            <button @click="deleteKategori(item)" class="text-red-600 hover:text-red-900">Hapus</button>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="kategori.length === 0">
-                                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">Belum ada kategori</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kategori</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Pupuk</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="item in kategori.data" :key="item.id" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.nama_kategori }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">{{ item.deskripsi || '-' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.pupuk_count || 0 }} pupuk</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex space-x-2">
+                                            <button
+                                                @click="openModal(item)"
+                                                class="text-green-600 hover:text-green-900 text-sm font-medium"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                @click="deleteKategori(item)"
+                                                class="text-red-600 hover:text-red-900 text-sm font-medium"
+                                            >
+                                                Hapus
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr v-if="!kategori.data || kategori.data.length === 0">
+                                    <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                        Belum ada kategori
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div v-if="kategori.last_page > 1" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-700">
+                                Menampilkan {{ kategori.from || 0 }} sampai {{ kategori.to || 0 }} dari {{ kategori.total || 0 }} data
+                            </div>
+                            <div class="flex space-x-1">
+                                <button
+                                    @click="goToPage(kategori.current_page - 1)"
+                                    :disabled="!kategori.prev_page_url"
+                                    class="px-3 py-1 text-sm border rounded-md"
+                                    :class="kategori.prev_page_url ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'"
+                                >
+                                    Prev
+                                </button>
+                                <button
+                                    v-for="page in visiblePages"
+                                    :key="page"
+                                    @click="goToPage(page)"
+                                    class="px-3 py-1 text-sm border rounded-md"
+                                    :class="page === kategori.current_page ? 'bg-green-50 border-green-500 text-green-600' : 'hover:bg-gray-50'"
+                                >
+                                    {{ page }}
+                                </button>
+                                <button
+                                    @click="goToPage(kategori.current_page + 1)"
+                                    :disabled="!kategori.next_page_url"
+                                    class="px-3 py-1 text-sm border rounded-md"
+                                    :class="kategori.next_page_url ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'"
+                                >
+                                    Next
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -107,13 +202,18 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { ref, reactive, computed } from 'vue'
+import { useForm, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 
 const props = defineProps({
-    kategori: Array
+    kategori: Object,
+    filters: Object
 })
+
+// Search and pagination
+const searchQuery = ref(props.filters?.search || '')
+const perPageSelected = ref(props.filters?.per_page || 10)
 
 const showModal = ref(false)
 const isEditing = ref(false)
@@ -182,4 +282,69 @@ const deleteKategori = (kategori) => {
         formData.delete(`/admin/kategori/${kategori.id}`)
     }
 }
+
+// Search and pagination functions
+const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+};
+
+const debouncedSearch = debounce(() => {
+    updateUrl({ search: searchQuery.value, page: 1 });
+}, 300);
+
+const changePerPage = () => {
+    updateUrl({ per_page: perPageSelected.value, page: 1 });
+};
+
+const goToPage = (page) => {
+    if (page >= 1 && page <= props.kategori.last_page) {
+        updateUrl({ page });
+    }
+};
+
+const updateUrl = (params) => {
+    const currentParams = new URLSearchParams(window.location.search);
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+            currentParams.set(key, value);
+        } else {
+            currentParams.delete(key);
+        }
+    });
+
+    router.get(`${window.location.pathname}?${currentParams.toString()}`, {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+// Export functions
+const exportPdf = () => {
+    window.open(`/admin/kategori/export/pdf?search=${searchQuery.value}`, '_blank');
+};
+
+const exportExcel = () => {
+    window.open(`/admin/kategori/export/excel?search=${searchQuery.value}`, '_blank');
+};
+
+// Pagination computed
+const visiblePages = computed(() => {
+    const current = props.kategori.current_page;
+    const last = props.kategori.last_page;
+    const pages = [];
+
+    const start = Math.max(1, current - 2);
+    const end = Math.min(last, current + 2);
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return pages;
+});
 </script>

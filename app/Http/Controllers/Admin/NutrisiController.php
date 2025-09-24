@@ -9,12 +9,28 @@ use Inertia\Inertia;
 
 class NutrisiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $nutrisi = Nutrisi::withCount('pupuk')->orderBy('nama_nutrisi')->get();
+        $query = Nutrisi::withCount('pupuk')->orderBy('nama_nutrisi');
+
+        // Search functionality
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_nutrisi', 'like', '%' . $request->search . '%')
+                  ->orWhere('formula_kimia', 'like', '%' . $request->search . '%')
+                  ->orWhere('deskripsi_nutrisi', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $perPage = $request->per_page ?? 10;
+        $nutrisi = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Nutrisi', [
-            'nutrisi' => $nutrisi
+            'nutrisi' => $nutrisi,
+            'filters' => [
+                'search' => $request->search,
+                'per_page' => $perPage,
+            ],
         ]);
     }    public function store(Request $request)
     {
@@ -64,5 +80,57 @@ class NutrisiController extends Controller
         $nutrisi->delete();
 
         return redirect()->back()->with('success', 'Nutrisi berhasil dihapus');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = Nutrisi::withCount('pupuk')->orderBy('nama_nutrisi');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_nutrisi', 'like', '%' . $request->search . '%')
+                  ->orWhere('formula_kimia', 'like', '%' . $request->search . '%')
+                  ->orWhere('deskripsi_nutrisi', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $nutrisi = $query->get();
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('pdf.nutrisi', compact('nutrisi'));
+
+        return $pdf->download('data-nutrisi.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $query = Nutrisi::withCount('pupuk')->orderBy('nama_nutrisi');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_nutrisi', 'like', '%' . $request->search . '%')
+                  ->orWhere('formula_kimia', 'like', '%' . $request->search . '%')
+                  ->orWhere('deskripsi_nutrisi', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $nutrisi = $query->get();
+
+        $excelService = app(\App\Services\ExcelExportService::class);
+
+        $headers = ['No', 'Nama Nutrisi', 'Formula Kimia', 'Satuan', 'Jumlah Pupuk', 'Deskripsi'];
+
+        $data = $nutrisi->map(function ($item, $index) {
+            return [
+                $index + 1,
+                $item->nama_nutrisi,
+                $item->formula_kimia ?: '-',
+                $item->satuan,
+                $item->pupuk_count . ' pupuk',
+                $item->deskripsi_nutrisi ?: '-'
+            ];
+        })->toArray();
+
+        return $excelService->export('Data Nutrisi', $headers, $data, 'data-nutrisi.xlsx');
     }
 }

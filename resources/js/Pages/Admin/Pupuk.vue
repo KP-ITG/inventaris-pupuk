@@ -1,12 +1,13 @@
 <script setup>
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
-defineProps({
-    pupuks: Array,
+const props = defineProps({
+    pupuks: Object,
     categories: Array,
     nutrisiList: Array,
+    filters: Object,
 });
 
 const showModal = ref(false);
@@ -14,6 +15,10 @@ const showDetailModal = ref(false);
 const editMode = ref(false);
 const processing = ref(false);
 const selectedPupuk = ref(null);
+
+// Search and pagination
+const searchQuery = ref(props.filters?.search || '');
+const perPageSelected = ref(props.filters?.per_page || 10);
 
 const form = ref({
     id: null,
@@ -109,6 +114,71 @@ const deletePupuk = (id) => {
 const closeModal = () => {
     showModal.value = false;
 };
+
+// Search and pagination functions
+const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+};
+
+const debouncedSearch = debounce(() => {
+    updateUrl({ search: searchQuery.value, page: 1 });
+}, 300);
+
+const changePerPage = () => {
+    updateUrl({ per_page: perPageSelected.value, page: 1 });
+};
+
+const goToPage = (page) => {
+    if (page >= 1 && page <= props.pupuks.last_page) {
+        updateUrl({ page });
+    }
+};
+
+const updateUrl = (params) => {
+    const currentParams = new URLSearchParams(window.location.search);
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+            currentParams.set(key, value);
+        } else {
+            currentParams.delete(key);
+        }
+    });
+
+    router.get(`${window.location.pathname}?${currentParams.toString()}`, {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+// Export functions
+const exportPdf = () => {
+    window.open(`/admin/pupuk/export/pdf?search=${searchQuery.value}`, '_blank');
+};
+
+const exportExcel = () => {
+    window.open(`/admin/pupuk/export/excel?search=${searchQuery.value}`, '_blank');
+};
+
+// Pagination computed
+const visiblePages = computed(() => {
+    const current = props.pupuks.current_page;
+    const last = props.pupuks.last_page;
+    const pages = [];
+
+    const start = Math.max(1, current - 2);
+    const end = Math.min(last, current + 2);
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return pages;
+});
 </script>
 
 <template>
@@ -117,6 +187,7 @@ const closeModal = () => {
     <DashboardLayout>
         <div class="space-y-6">
             <div class="bg-white shadow rounded-lg">
+                <!-- Header -->
                 <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <div>
                         <h2 class="text-lg font-medium text-gray-900">Manajemen Pupuk</h2>
@@ -124,15 +195,58 @@ const closeModal = () => {
                             Kelola data pupuk dan kategorinya
                         </p>
                     </div>
-                    <button
-                        @click="openCreateModal"
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                    >
-                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Tambah Pupuk
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <button
+                            @click="exportPdf"
+                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                            PDF
+                        </button>
+                        <button
+                            @click="exportExcel"
+                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                            Excel
+                        </button>
+                        <button
+                            @click="openCreateModal"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        >
+                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Tambah Pupuk
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <div class="flex-1 max-w-md">
+                            <input
+                                v-model="searchQuery"
+                                @input="debouncedSearch"
+                                type="text"
+                                placeholder="Cari pupuk..."
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm"
+                            />
+                        </div>
+                        <div class="flex items-center space-x-2 ml-4">
+                            <span class="text-sm text-gray-700">Tampilkan:</span>
+                            <select
+                                v-model="perPageSelected"
+                                @change="changePerPage"
+                                class="border border-gray-300 rounded-md text-sm px-2 py-1"
+                            >
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="text-sm text-gray-700">data</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -157,7 +271,7 @@ const closeModal = () => {
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="pupuk in pupuks" :key="pupuk.id" class="hover:bg-gray-50">
+                            <tr v-for="pupuk in pupuks.data" :key="pupuk.id" class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
                                         {{ pupuk.nama_pupuk }}
@@ -210,12 +324,49 @@ const closeModal = () => {
                     </table>
                 </div>
 
-                <div v-if="!pupuks || pupuks.length === 0" class="text-center py-12">
+                <!-- Empty State -->
+                <div v-if="!pupuks.data || pupuks.data.length === 0" class="text-center py-12">
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z M16 8L2 22 M17.5 15H9" />
                     </svg>
                     <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada pupuk</h3>
                     <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan pupuk baru.</p>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="pupuks.last_page > 1" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-700">
+                            Menampilkan {{ pupuks.from || 0 }} sampai {{ pupuks.to || 0 }} dari {{ pupuks.total || 0 }} data
+                        </div>
+                        <div class="flex space-x-1">
+                            <button
+                                @click="goToPage(pupuks.current_page - 1)"
+                                :disabled="!pupuks.prev_page_url"
+                                class="px-3 py-1 text-sm border rounded-md"
+                                :class="pupuks.prev_page_url ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'"
+                            >
+                                Prev
+                            </button>
+                            <button
+                                v-for="page in visiblePages"
+                                :key="page"
+                                @click="goToPage(page)"
+                                class="px-3 py-1 text-sm border rounded-md"
+                                :class="page === pupuks.current_page ? 'bg-green-50 border-green-500 text-green-600' : 'hover:bg-gray-50'"
+                            >
+                                {{ page }}
+                            </button>
+                            <button
+                                @click="goToPage(pupuks.current_page + 1)"
+                                :disabled="!pupuks.next_page_url"
+                                class="px-3 py-1 text-sm border rounded-md"
+                                :class="pupuks.next_page_url ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
