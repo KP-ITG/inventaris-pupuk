@@ -7,6 +7,7 @@ use App\Models\Stok;
 use App\Models\Pupuk;
 use App\Models\Pengguna;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Exports\StokExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -51,6 +52,7 @@ class StokController extends Controller
 
         $stok = Stok::create([
             'pupuk_id' => $request->pupuk_id,
+            'pengguna_id' => Auth::id(),
             'jumlah_stok' => $request->jumlah_stok,
             'stok_minimum' => $request->stok_minimum ?? 0,
             'stok_maksimum' => $request->stok_maksimum ?? 0,
@@ -80,6 +82,7 @@ class StokController extends Controller
             'stok_minimum' => $request->stok_minimum ?? 0,
             'stok_maksimum' => $request->stok_maksimum ?? 0,
             'lokasi_gudang' => $request->lokasi_gudang,
+            // Tidak mengubah pengguna_id pada update
         ]);
 
         $stock->updateStatusStok();

@@ -11,6 +11,7 @@ class Stok extends Model
 
     protected $fillable = [
         'pupuk_id',
+        'pengguna_id',
         'jumlah_stok',
         'stok_minimum',
         'stok_maksimum',
@@ -30,6 +31,14 @@ class Stok extends Model
     public function pupuk(): BelongsTo
     {
         return $this->belongsTo(Pupuk::class, 'pupuk_id');
+    }
+    
+    /**
+     * Relasi ke pengguna
+     */
+    public function pengguna(): BelongsTo
+    {
+        return $this->belongsTo(Pengguna::class, 'pengguna_id');
     }
 
     /**
