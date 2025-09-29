@@ -11,18 +11,18 @@ class NutrisiExport extends DataExport
         $data = Nutrisi::all()->map(function($item) {
             return [
                 'ID' => $item->id,
-                'Kode Nutrisi' => $item->kode_nutrisi,
                 'Nama Nutrisi' => $item->nama_nutrisi,
                 'Satuan' => $item->satuan ?: '-',
-                'Deskripsi' => $item->deskripsi ?: '-',
+                'Formula Kimia' => $item->formula_kimia ?: '-',
+                'Deskripsi' => $item->deskripsi_nutrisi ?: '-',
             ];
         });
 
         $headings = [
             'ID',
-            'Kode Nutrisi',
             'Nama Nutrisi',
             'Satuan',
+            'Formula Kimia',
             'Deskripsi',
         ];
 
