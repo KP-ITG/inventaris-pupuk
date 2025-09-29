@@ -8,26 +8,26 @@ class StokExport extends DataExport
 {
     public function __construct()
     {
-        $data = Stok::with(['pupuk', 'supplier'])->get()->map(function($item) {
+        $data = Stok::with(['pupuk', 'pupuk.supplier', 'pengguna'])->get()->map(function($item) {
             return [
                 'ID' => $item->id,
                 'Pupuk' => $item->pupuk ? $item->pupuk->nama_pupuk : '-',
-                'Jumlah (kg)' => $item->jumlah_kg,
-                'Harga Beli/kg' => 'Rp ' . number_format($item->harga_beli_per_kg, 0, ',', '.'),
-                'Total Nilai' => 'Rp ' . number_format($item->jumlah_kg * $item->harga_beli_per_kg, 0, ',', '.'),
-                'Supplier' => $item->supplier ? $item->supplier->nama_supplier : '-',
-                'Tanggal Masuk' => $item->tanggal_masuk->format('d/m/Y'),
+                'Jumlah Stok' => $item->jumlah_stok,
+                'Status' => ucfirst(str_replace('_', ' ', $item->status_stok)),
+                'Lokasi Gudang' => $item->lokasi_gudang ?? '-',
+                'Supplier' => $item->pupuk && $item->pupuk->supplier ? $item->pupuk->supplier->nama_supplier : '-',
+                'Pengguna' => $item->pengguna ? $item->pengguna->nama : '-',
             ];
         });
 
         $headings = [
             'ID',
             'Pupuk',
-            'Jumlah (kg)',
-            'Harga Beli/kg',
-            'Total Nilai',
+            'Jumlah Stok',
+            'Status',
+            'Lokasi Gudang',
             'Supplier',
-            'Tanggal Masuk',
+            'Pengguna',
         ];
 
         parent::__construct($data, $headings);
