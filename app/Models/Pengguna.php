@@ -19,6 +19,7 @@ class Pengguna extends Authenticatable
         'email',
         'password_hash',
         'role',
+        'status',
         'alamat',
         'kontak',
         'profile_picture'

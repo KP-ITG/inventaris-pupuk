@@ -33,13 +33,13 @@ class AuthController extends Controller
             'email' => $request->email,
             'password_hash' => Hash::make($request->password),
             'role' => $request->role ?? 'distributor',
+            'status' => 'pending', // Default status pending untuk approval
             'alamat' => $request->alamat,
             'kontak' => $request->kontak,
         ]);
 
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
+        // Tidak langsung login, tunggu approval
+        return redirect()->route('login')->with('success', 'Registrasi berhasil! Akun Anda sedang menunggu persetujuan dari administrator.');
     }
 
     /**
@@ -60,11 +60,23 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        // Ubah field password menjadi password_hash untuk auth
-        $credentials['password_hash'] = $credentials['password'];
-        unset($credentials['password']);
-
         if (Auth::attempt(['email' => $credentials['email'], 'password' => $request->password])) {
+            $user = Auth::user();
+
+            // Check if user is approved
+            if ($user->status !== 'approved') {
+                Auth::logout();
+                $message = match($user->status) {
+                    'pending' => 'Akun Anda sedang menunggu persetujuan dari administrator.',
+                    'rejected' => 'Akun Anda telah ditolak oleh administrator.',
+                    default => 'Status akun Anda tidak valid.'
+                };
+
+                return back()->withErrors([
+                    'email' => $message,
+                ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
 
             return redirect()->intended(route('dashboard', absolute: false));

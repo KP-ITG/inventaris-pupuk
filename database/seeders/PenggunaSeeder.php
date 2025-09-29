@@ -22,6 +22,7 @@ class PenggunaSeeder extends Seeder
             'role' => 'admin',
             'alamat' => 'Jl. Admin No. 1',
             'kontak' => '081234567890',
+            'status' => 'approved',
         ]);
 
         // Buat distributor contoh
@@ -32,6 +33,7 @@ class PenggunaSeeder extends Seeder
             'role' => 'distributor',
             'alamat' => 'Jl. Distributor No. 2',
             'kontak' => '081987654321',
+            'status' => 'approved',
         ]);
     }
 }

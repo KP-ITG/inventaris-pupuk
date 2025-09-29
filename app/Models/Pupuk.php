@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Pupuk extends Model
 {
@@ -62,9 +63,9 @@ class Pupuk extends Model
     /**
      * Relasi ke tabel stok
      */
-    public function stok(): HasMany
+    public function stok(): HasOne
     {
-        return $this->hasMany(Stok::class, 'pupuk_id');
+        return $this->hasOne(Stok::class, 'pupuk_id');
     }
 
     /**
@@ -73,5 +74,13 @@ class Pupuk extends Model
     public function transaksiDistribusi(): HasMany
     {
         return $this->hasMany(TransaksiDistribusi::class, 'pupuk_id');
+    }
+
+    /**
+     * Relasi ke tabel distribusi pupuk
+     */
+    public function distribusiPupuk(): HasMany
+    {
+        return $this->hasMany(DistribusiPupuk::class, 'pupuk_id');
     }
 }
