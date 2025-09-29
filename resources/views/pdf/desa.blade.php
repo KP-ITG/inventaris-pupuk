@@ -6,93 +6,117 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
-            margin: 20px;
+            font-size: 11px;
+            margin: 0;
+            padding: 15px;
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #10b981;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #22c55e;
             padding-bottom: 10px;
         }
-        .header h1 {
-            color: #10b981;
+        .header h2 {
+            color: #22c55e;
             margin: 0;
-            font-size: 24px;
+            font-size: 16px;
         }
         .header p {
-            margin: 5px 0;
+            margin: 3px 0 0 0;
             color: #666;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            vertical-align: top;
         }
         th {
-            background-color: #10b981;
+            background-color: #22c55e;
             color: white;
             font-weight: bold;
+            text-align: center;
+            font-size: 10px;
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-        .text-center { text-align: center; }
-        .status-aktif { color: #10b981; font-weight: bold; }
-        .status-non-aktif { color: #dc2626; font-weight: bold; }
-        .footer {
-            margin-top: 30px;
+        .text-center {
             text-align: center;
-            font-size: 10px;
+        }
+        .status {
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .status.aktif {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status.non-aktif {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 9px;
             color: #666;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Data Desa</h1>
-        <p>Sistem Manajemen Pupuk</p>
-        <p>Dicetak pada: {{ date('d F Y H:i') }}</p>
+        <h2>Data Desa</h2>
+        <p>Dinas Pertanian</p>
+        <p>Dicetak pada: {{ date('d/m/Y H:i:s') }}</p>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th class="text-center" width="5%">No</th>
-                <th width="25%">Nama Desa</th>
-                <th width="20%">Kecamatan</th>
-                <th width="20%">Kabupaten</th>
-                <th width="15%">Jumlah Distribusi</th>
-                <th width="15%">Status</th>
+                <th width="5%">No</th>
+                <th width="20%">Nama Desa</th>
+                <th width="18%">Kecamatan</th>
+                <th width="18%">Kabupaten</th>
+                <th width="15%">Kepala Desa</th>
+                <th width="12%">Distribusi</th>
+                <th width="12%">Status</th>
             </tr>
         </thead>
         <tbody>
             @forelse($desa as $index => $item)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $item->nama_desa }}</td>
+                <td><strong>{{ $item->nama_desa }}</strong></td>
                 <td>{{ $item->kecamatan }}</td>
                 <td>{{ $item->kabupaten }}</td>
+                <td>{{ $item->nama_kepala_desa ?: '-' }}</td>
                 <td class="text-center">{{ $item->distribusi_pupuk_count }} distribusi</td>
-                <td class="text-center {{ $item->status === 'aktif' ? 'status-aktif' : 'status-non-aktif' }}">
-                    {{ ucfirst($item->status) }}
+                <td class="text-center">
+                    <span class="status {{ $item->status }}">
+                        {{ ucfirst($item->status) }}
+                    </span>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center">Tidak ada data</td>
+                <td colspan="7" class="text-center" style="padding: 20px; color: #666;">
+                    Tidak ada data desa
+                </td>
             </tr>
             @endforelse
         </tbody>
     </table>
 
     <div class="footer">
-        <p>© {{ date('Y') }} Sistem Manajemen Pupuk - Dicetak secara otomatis</p>
+        <p>Total: {{ count($desa) }} desa | Sistem Inventaris Pupuk - Dinas Pertanian</p>
     </div>
 </body>
 </html>

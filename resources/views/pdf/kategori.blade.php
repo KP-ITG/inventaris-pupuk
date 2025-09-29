@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Data Nutrisi</title>
+    <title>Data Kategori Pupuk</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -48,12 +48,6 @@
         .text-center {
             text-align: center;
         }
-        .formula {
-            font-family: 'Courier New', monospace;
-            background-color: #f0f0f0;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
         .footer {
             margin-top: 30px;
             text-align: right;
@@ -64,7 +58,7 @@
 </head>
 <body>
     <div class="header">
-        <h2>Data Nutrisi</h2>
+        <h2>Data Kategori Pupuk</h2>
         <p>Dinas Pertanian</p>
         <p>Dicetak pada: {{ date('d/m/Y H:i:s') }}</p>
     </div>
@@ -73,33 +67,25 @@
         <thead>
             <tr>
                 <th width="5%">No</th>
-                <th width="20%">Nama Nutrisi</th>
-                <th width="15%">Formula Kimia</th>
-                <th width="10%">Satuan</th>
+                <th width="25%">Nama Kategori</th>
+                <th width="40%">Deskripsi</th>
                 <th width="15%">Jumlah Pupuk</th>
-                <th width="35%">Deskripsi</th>
+                <th width="15%">Tanggal Dibuat</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($nutrisi as $index => $item)
+            @forelse($kategori as $index => $item)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td><strong>{{ $item->nama_nutrisi }}</strong></td>
-                <td class="text-center">
-                    @if($item->formula_kimia)
-                        <span class="formula">{{ $item->formula_kimia }}</span>
-                    @else
-                        -
-                    @endif
-                </td>
-                <td class="text-center">{{ ucfirst($item->satuan) }}</td>
+                <td><strong>{{ $item->nama_kategori }}</strong></td>
+                <td>{{ $item->deskripsi ?: 'Tidak ada deskripsi' }}</td>
                 <td class="text-center">{{ $item->pupuk_count }} pupuk</td>
-                <td>{{ $item->deskripsi_nutrisi ?: 'Tidak ada deskripsi' }}</td>
+                <td class="text-center">{{ $item->created_at->format('d/m/Y') }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center" style="padding: 20px; color: #666;">
-                    Tidak ada data nutrisi
+                <td colspan="5" class="text-center" style="padding: 20px; color: #666;">
+                    Tidak ada data kategori
                 </td>
             </tr>
             @endforelse
@@ -107,7 +93,7 @@
     </table>
 
     <div class="footer">
-        <p>Total: {{ count($nutrisi) }} nutrisi | Sistem Inventaris Pupuk - Dinas Pertanian</p>
+        <p>Total: {{ count($kategori) }} kategori | Sistem Inventaris Pupuk - Dinas Pertanian</p>
     </div>
 </body>
 </html>

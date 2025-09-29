@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Desa;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use PDF;
+use App\Exports\DesaExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DesaController extends Controller
 {
@@ -129,10 +132,9 @@ class DesaController extends Controller
 
         $desa = $query->get();
 
-        $pdf = app('dompdf.wrapper');
-        $pdf->loadView('pdf.desa', compact('desa'));
+        $pdf = PDF::loadView('pdf.desa', compact('desa'));
 
-        return $pdf->download('data-desa.pdf');
+        return $pdf->download('data-desa-' . date('Y-m-d') . '.pdf');
     }
 
     public function exportExcel(Request $request)
@@ -149,12 +151,11 @@ class DesaController extends Controller
 
         $desa = $query->get();
 
-        $excelService = app(\App\Services\ExcelExportService::class);
-
         $headers = ['No', 'Nama Desa', 'Kecamatan', 'Kabupaten', 'Jumlah Distribusi', 'Status'];
 
-        $data = $desa->map(function ($item, $index) {
-            return [
+        $data = [];
+        foreach ($desa as $index => $item) {
+            $data[] = [
                 $index + 1,
                 $item->nama_desa,
                 $item->kecamatan,
@@ -162,8 +163,26 @@ class DesaController extends Controller
                 $item->distribusi_pupuk_count . ' distribusi',
                 ucfirst($item->status)
             ];
-        })->toArray();
+        }
 
-        return $excelService->export('Data Desa', $headers, $data, 'data-desa.xlsx');
+        $filename = 'data-desa-' . date('Y-m-d') . '.csv';
+
+        $callback = function() use ($data, $headers) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, $headers, ';');
+            foreach ($data as $row) {
+                fputcsv($file, $row, ';');
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ]);
     }
 }

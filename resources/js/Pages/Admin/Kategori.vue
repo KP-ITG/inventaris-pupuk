@@ -325,11 +325,19 @@ const updateUrl = (params) => {
 
 // Export functions
 const exportPdf = () => {
-    window.open(`/admin/kategori/export/pdf?search=${searchQuery.value}`, '_blank');
+    const params = new URLSearchParams({
+        search: searchQuery.value || '',
+        per_page: perPageSelected.value
+    });
+    window.open(`/admin/kategori/export/pdf?${params.toString()}`, '_blank');
 };
 
 const exportExcel = () => {
-    window.open(`/admin/kategori/export/excel?search=${searchQuery.value}`, '_blank');
+    const params = new URLSearchParams({
+        search: searchQuery.value || '',
+        per_page: perPageSelected.value
+    });
+    window.location.href = `/admin/kategori/export/excel?${params.toString()}`;
 };
 
 // Pagination computed

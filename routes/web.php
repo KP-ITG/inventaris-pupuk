@@ -41,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('nutrisi', NutrisiController::class);
         Route::get('/nutrisi/export/pdf', [NutrisiController::class, 'exportPdf'])->name('nutrisi.export.pdf');
         Route::get('/nutrisi/export/excel', [NutrisiController::class, 'exportExcel'])->name('nutrisi.export.excel');
+
         Route::resource('pupuk', PupukController::class);
         Route::get('/pupuk/export/pdf', [PupukController::class, 'exportPdf'])->name('pupuk.export.pdf');
         Route::get('/pupuk/export/excel', [PupukController::class, 'exportExcel'])->name('pupuk.export.excel');

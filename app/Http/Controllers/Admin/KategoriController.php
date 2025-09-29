@@ -7,6 +7,9 @@ use App\Models\KategoriPupuk;
 use App\Services\ExcelExportService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Exports\KategoriExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class KategoriController extends Controller
 {
@@ -92,10 +95,9 @@ class KategoriController extends Controller
 
         $kategori = $query->orderBy($sort, $order)->get();
 
-        $pdf = app('dompdf.wrapper');
-        $pdf->loadView('exports.kategori-pdf', compact('kategori'));
+        $pdf = PDF::loadView('pdf.kategori', compact('kategori'));
 
-        return $pdf->download('kategori-pupuk.pdf');
+        return $pdf->download('kategori-pupuk-' . date('Y-m-d') . '.pdf');
     }
 
     public function exportExcel(Request $request)
@@ -126,8 +128,24 @@ class KategoriController extends Controller
             ];
         }
 
-        $filename = 'kategori-pupuk-' . date('Y-m-d') . '.xlsx';
+        $filename = 'kategori-pupuk-' . date('Y-m-d') . '.csv';
 
-        return ExcelExportService::export($data, $headers, $filename, 'Data Kategori Pupuk');
+        $callback = function() use ($data, $headers) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, $headers, ';');
+            foreach ($data as $row) {
+                fputcsv($file, $row, ';');
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ]);
     }
 }

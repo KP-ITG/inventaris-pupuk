@@ -352,11 +352,19 @@ const updateUrl = (params) => {
 
 // Export functions
 const exportPdf = () => {
-    window.open(`/admin/nutrisi/export/pdf?search=${searchQuery.value}`, '_blank');
+    const params = new URLSearchParams({
+        search: searchQuery.value || '',
+        per_page: perPageSelected.value
+    });
+    window.open(`/admin/nutrisi/export/pdf?${params.toString()}`, '_blank');
 };
 
 const exportExcel = () => {
-    window.open(`/admin/nutrisi/export/excel?search=${searchQuery.value}`, '_blank');
+    const params = new URLSearchParams({
+        search: searchQuery.value || '',
+        per_page: perPageSelected.value
+    });
+    window.location.href = `/admin/nutrisi/export/excel?${params.toString()}`;
 };
 
 // Pagination computed

@@ -8,6 +8,9 @@ use App\Models\KategoriPupuk;
 use App\Models\Nutrisi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use PDF;
+use App\Exports\PupukExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PupukController extends Controller
 {
@@ -143,10 +146,9 @@ class PupukController extends Controller
 
         $pupuks = $query->get();
 
-        $pdf = app('dompdf.wrapper');
-        $pdf->loadView('pdf.pupuk', compact('pupuks'));
+        $pdf = PDF::loadView('pdf.pupuk', compact('pupuks'));
 
-        return $pdf->download('data-pupuk.pdf');
+        return $pdf->download('data-pupuk-' . date('Y-m-d') . '.pdf');
     }
 
     public function exportExcel(Request $request)
@@ -165,16 +167,15 @@ class PupukController extends Controller
 
         $pupuks = $query->get();
 
-        $excelService = app(\App\Services\ExcelExportService::class);
-
         $headers = ['No', 'Nama Pupuk', 'Kategori', 'Harga Jual', 'Kandungan Nutrisi', 'Deskripsi'];
 
-        $data = $pupuks->map(function ($pupuk, $index) {
+        $data = [];
+        foreach ($pupuks as $index => $pupuk) {
             $nutrisi = $pupuk->nutrisi->map(function ($n) {
                 return $n->nama_nutrisi . ' (' . $n->pivot->kandungan_persen . '%)';
             })->implode(', ');
 
-            return [
+            $data[] = [
                 $index + 1,
                 $pupuk->nama_pupuk,
                 $pupuk->kategori->nama_kategori ?? '-',
@@ -182,8 +183,33 @@ class PupukController extends Controller
                 $nutrisi ?: '-',
                 $pupuk->deskripsi ?: '-'
             ];
-        })->toArray();
+        }
 
-        return $excelService->export('Data Pupuk', $headers, $data, 'data-pupuk.xlsx');
+        $filename = 'data-pupuk-' . date('Y-m-d') . '.csv';
+
+        $callback = function() use ($data, $headers) {
+            $file = fopen('php://output', 'w');
+
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Headers
+            fputcsv($file, $headers, ';');
+
+            // Data
+            foreach ($data as $row) {
+                fputcsv($file, $row, ';');
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ]);
     }
 }

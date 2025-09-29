@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Nutrisi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use PDF;
+use App\Exports\NutrisiExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class NutrisiController extends Controller
 {
@@ -96,10 +99,9 @@ class NutrisiController extends Controller
 
         $nutrisi = $query->get();
 
-        $pdf = app('dompdf.wrapper');
-        $pdf->loadView('pdf.nutrisi', compact('nutrisi'));
+        $pdf = PDF::loadView('pdf.nutrisi', compact('nutrisi'));
 
-        return $pdf->download('data-nutrisi.pdf');
+        return $pdf->download('data-nutrisi-' . date('Y-m-d') . '.pdf');
     }
 
     public function exportExcel(Request $request)
@@ -116,12 +118,11 @@ class NutrisiController extends Controller
 
         $nutrisi = $query->get();
 
-        $excelService = app(\App\Services\ExcelExportService::class);
-
         $headers = ['No', 'Nama Nutrisi', 'Formula Kimia', 'Satuan', 'Jumlah Pupuk', 'Deskripsi'];
 
-        $data = $nutrisi->map(function ($item, $index) {
-            return [
+        $data = [];
+        foreach ($nutrisi as $index => $item) {
+            $data[] = [
                 $index + 1,
                 $item->nama_nutrisi,
                 $item->formula_kimia ?: '-',
@@ -129,8 +130,26 @@ class NutrisiController extends Controller
                 $item->pupuk_count . ' pupuk',
                 $item->deskripsi_nutrisi ?: '-'
             ];
-        })->toArray();
+        }
 
-        return $excelService->export('Data Nutrisi', $headers, $data, 'data-nutrisi.xlsx');
+        $filename = 'data-nutrisi-' . date('Y-m-d') . '.csv';
+
+        $callback = function() use ($data, $headers) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, $headers, ';');
+            foreach ($data as $row) {
+                fputcsv($file, $row, ';');
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ]);
     }
 }
