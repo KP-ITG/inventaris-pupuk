@@ -86,7 +86,7 @@
     <div class="header">
         <h2>Data Distribusi Pupuk ke Desa</h2>
         <p>Dinas Pertanian</p>
-        <p>Dicetak pada: {{ date('d/m/Y H:i:s') }}</p>
+        <p>Dicetak pada: {{ date('d/m/Y') }}</p>
     </div>
 
     <table>
