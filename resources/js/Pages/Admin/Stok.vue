@@ -141,8 +141,6 @@
                                 class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
                             >
                                 <option value="">Semua Tahun</option>
-                                <option value="2023">2023</option>
-                                <option value="2024">2024</option>
                                 <option value="2025">2025</option>
                                 <option value="2026">2026</option>
                                 <option value="2027">2027</option>
