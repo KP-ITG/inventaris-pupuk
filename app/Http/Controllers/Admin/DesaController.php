@@ -25,6 +25,14 @@ class DesaController extends Controller
             });
         }
 
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
         $perPage = $request->per_page ?? 10;
         $desa = $query->paginate($perPage)->withQueryString();
 
@@ -33,6 +41,8 @@ class DesaController extends Controller
             'filters' => [
                 'search' => $request->search,
                 'per_page' => $perPage,
+                'month' => $request->month,
+                'year' => $request->year
             ],
         ]);
     }
@@ -130,6 +140,14 @@ class DesaController extends Controller
             });
         }
 
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
         $desa = $query->get();
 
         $pdf = PDF::loadView('pdf.desa', compact('desa'));
@@ -147,6 +165,14 @@ class DesaController extends Controller
                   ->orWhere('kecamatan', 'like', '%' . $request->search . '%')
                   ->orWhere('kabupaten', 'like', '%' . $request->search . '%');
             });
+        }
+
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
         }
 
         $desa = $query->get();

@@ -1,43 +1,9 @@
 <template>
     <DashboardLayout title="Manajemen Stok">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">Stok Pusat Pupuk</h1>
-                <div class="flex items-center space-x-2">
-                    <button
-                        @click="exportPdf"
-                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
-                    >
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        PDF
-                    </button>
-                    <button
-                        @click="exportExcel"
-                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
-                    >
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Excel
-                    </button>
-                    <button
-                        @click="showModal = true; isEditing = false; resetForm()"
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="availablePupuks.length === 0"
-                    >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        {{ availablePupuks.length === 0 ? 'Semua Pupuk Sudah Terdaftar' : 'Tambah Stok Pupuk' }}
-                    </button>
-                </div>
-            </div>
-
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
@@ -47,7 +13,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-600">Total Jenis Pupuk</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ stocks.length }}</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ (stocks.data || stocks).length }}</p>
                         </div>
                     </div>
                 </div>
@@ -61,7 +27,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-600">Stok Aman</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ stocks.filter(s => s.status_stok === 'aman').length }}</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ (stocks.data || stocks).filter(s => s.status_stok === 'aman').length }}</p>
                         </div>
                     </div>
                 </div>
@@ -75,15 +41,139 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-600">Perlu Perhatian</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ stocks.filter(s => s.status_stok !== 'aman').length }}</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ (stocks.data || stocks).filter(s => s.status_stok !== 'aman').length }}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
+            <!-- Main Card -->
+            <div class="bg-white rounded-lg shadow">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-medium text-gray-900">Manajemen Stok Pusat</h2>
+                        <div class="flex items-center space-x-2">
+                            <button
+                                @click="exportPdf"
+                                class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
+                            >
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                PDF
+                            </button>
+                            <button
+                                @click="exportExcel"
+                                class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
+                            >
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Excel
+                            </button>
+                            <button
+                                @click="showModal = true; isEditing = false; resetForm()"
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="availablePupuks.length === 0"
+                            >
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                {{ availablePupuks.length === 0 ? 'Semua Pupuk Sudah Terdaftar' : 'Tambah Stok' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                        <div class="flex-1 max-w-md">
+                            <input
+                                v-model="searchQuery"
+                                @input="debouncedSearch"
+                                type="text"
+                                placeholder="Cari pupuk, kode, atau lokasi gudang..."
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm"
+                            />
+                        </div>
+                        <div class="flex items-center gap-2 whitespace-nowrap">
+                            <span class="text-sm text-gray-700">Tampilkan</span>
+                            <select
+                                v-model="perPageSelected"
+                                @change="changePerPage"
+                                class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
+                            >
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="text-sm text-gray-700">data</span>
+                        </div>
+                    </div>
+
+                    <!-- Period Filter -->
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 pt-3 border-t border-gray-200 mt-3">
+                        <span class="text-sm font-medium text-gray-700 whitespace-nowrap">Filter Periode:</span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select
+                                v-model="filterMonth"
+                                class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
+                            >
+                                <option value="">Semua Bulan</option>
+                                <option value="01">Januari</option>
+                                <option value="02">Februari</option>
+                                <option value="03">Maret</option>
+                                <option value="04">April</option>
+                                <option value="05">Mei</option>
+                                <option value="06">Juni</option>
+                                <option value="07">Juli</option>
+                                <option value="08">Agustus</option>
+                                <option value="09">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                            <select
+                                v-model="filterYear"
+                                class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
+                            >
+                                <option value="">Semua Tahun</option>
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                            </select>
+                            <button
+                                @click="applyFilter"
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-md text-sm font-medium shadow-sm"
+                            >
+                                Terapkan
+                            </button>
+                            <button
+                                @click="resetFilter"
+                                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-1.5 rounded-md text-sm font-medium"
+                            >
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flash Messages -->
+                <div v-if="$page.props.flash?.success" class="mx-6 mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                    <p class="text-green-700">{{ $page.props.flash.success }}</p>
+                </div>
+                <div v-if="$page.props.flash?.error" class="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                    <p class="text-red-700">{{ $page.props.flash.error }}</p>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -110,7 +200,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="stock in stocks" :key="stock.id" class="hover:bg-gray-50">
+                        <tr v-for="stock in stocks.data" :key="stock.id" class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="ml-4">
@@ -158,18 +248,54 @@
                                 </button>
                             </td>
                         </tr>
-                        <tr v-if="stocks.length === 0">
+                        <tr v-if="stocks.data && stocks.data.length === 0">
                             <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                                 Belum ada data stok
                             </td>
                         </tr>
                     </tbody>
                 </table>
-            </div>
-        </div>
+                </div>
 
-        <!-- Modal -->
-        <div v-if="showModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <!-- Pagination -->
+                <div v-if="stocks.last_page > 1" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-700">
+                            Menampilkan {{ stocks.from || 0 }} sampai {{ stocks.to || 0 }} dari {{ stocks.total || 0 }} data
+                        </div>
+                        <div class="flex space-x-1">
+                            <button
+                                @click="goToPage(stocks.current_page - 1)"
+                                :disabled="!stocks.prev_page_url"
+                                class="px-3 py-1 text-sm border rounded-md"
+                                :class="stocks.prev_page_url ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'"
+                            >
+                                Prev
+                            </button>
+                            <button
+                                v-for="page in visiblePages"
+                                :key="page"
+                                @click="goToPage(page)"
+                                class="px-3 py-1 text-sm border rounded-md"
+                                :class="page === stocks.current_page ? 'bg-green-50 border-green-500 text-green-600' : 'hover:bg-gray-50'"
+                            >
+                                {{ page }}
+                            </button>
+                            <button
+                                @click="goToPage(stocks.current_page + 1)"
+                                :disabled="!stocks.next_page_url"
+                                class="px-3 py-1 text-sm border rounded-md"
+                                :class="stocks.next_page_url ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div v-if="showModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div class="mt-3">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">
@@ -274,6 +400,8 @@
                     </form>
                 </div>
             </div>
+            </div>
+            </div>
         </div>
     </DashboardLayout>
 </template>
@@ -284,9 +412,15 @@ import { router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 
 const props = defineProps({
-    stocks: Array,
-    pupuks: Array
+    stocks: Object,
+    pupuks: Array,
+    filters: Object
 })
+
+const searchQuery = ref(props.filters?.search || '')
+const perPageSelected = ref(props.filters?.per_page || 10)
+const filterMonth = ref(props.filters?.month || '')
+const filterYear = ref(props.filters?.year || '')
 
 const showModal = ref(false)
 const isEditing = ref(false)
@@ -307,7 +441,7 @@ const availablePupuks = computed(() => {
         return props.pupuks
     } else {
         // Saat tambah baru, hanya tampilkan pupuk yang belum ada di stok
-        const existingPupukIds = props.stocks.map(stock => stock.pupuk_id)
+        const existingPupukIds = (props.stocks.data || props.stocks).map(stock => stock.pupuk_id)
         return props.pupuks.filter(pupuk => !existingPupukIds.includes(pupuk.id))
     }
 })
@@ -420,10 +554,95 @@ const formatRelativeTime = (dateString) => {
 }
 
 const exportPdf = () => {
-    window.location.href = route('admin.stok.export.pdf');
+    const params = new URLSearchParams();
+    if (filterMonth.value) params.append('month', filterMonth.value);
+    if (filterYear.value) params.append('year', filterYear.value);
+    window.location.href = route('admin.stok.export.pdf') + (params.toString() ? '?' + params.toString() : '');
 };
 
 const exportExcel = () => {
-    window.location.href = route('admin.stok.export.excel');
+    const params = new URLSearchParams();
+    if (filterMonth.value) params.append('month', filterMonth.value);
+    if (filterYear.value) params.append('year', filterYear.value);
+    window.location.href = route('admin.stok.export.excel') + (params.toString() ? '?' + params.toString() : '');
 };
+
+// Period filter functions
+const applyFilter = () => {
+    updateUrl({
+        month: filterMonth.value,
+        year: filterYear.value,
+        search: searchQuery.value,
+        per_page: perPageSelected.value,
+        page: 1
+    })
+}
+
+const resetFilter = () => {
+    filterMonth.value = ''
+    filterYear.value = ''
+    updateUrl({
+        month: '',
+        year: '',
+        search: searchQuery.value,
+        per_page: perPageSelected.value,
+        page: 1
+    })
+}
+
+// Search and pagination functions
+const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+};
+
+const debouncedSearch = debounce(() => {
+    updateUrl({ search: searchQuery.value, page: 1 });
+}, 300);
+
+const changePerPage = () => {
+    updateUrl({ per_page: perPageSelected.value, page: 1 });
+};
+
+const goToPage = (page) => {
+    if (page >= 1 && page <= props.stocks.last_page) {
+        updateUrl({ page });
+    }
+};
+
+const updateUrl = (params) => {
+    const currentParams = new URLSearchParams(window.location.search);
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+            currentParams.set(key, value);
+        } else {
+            currentParams.delete(key);
+        }
+    });
+
+    router.get(`${window.location.pathname}?${currentParams.toString()}`, {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+// Pagination computed
+const visiblePages = computed(() => {
+    const current = props.stocks.current_page;
+    const last = props.stocks.last_page;
+    const pages = [];
+
+    const start = Math.max(1, current - 2);
+    const end = Math.min(last, current + 2);
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return pages;
+});
 </script>

@@ -11,12 +11,29 @@ use Inertia\Inertia;
 
 class StokController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Sistem stok pusat - hanya admin yang bisa akses
-        $stocks = Stok::with(['pupuk.kategori'])
-                      ->orderBy('updated_at', 'desc')
-                      ->get();
+        $query = Stok::with(['pupuk.kategori']);
+
+        // Search functionality
+        if ($request->search) {
+            $query->whereHas('pupuk', function($q) use ($request) {
+                $q->where('nama_pupuk', 'like', '%' . $request->search . '%')
+                  ->orWhere('kode_pupuk', 'like', '%' . $request->search . '%');
+            })->orWhere('lokasi_gudang', 'like', '%' . $request->search . '%');
+        }
+
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
+        $perPage = $request->per_page ?? 10;
+        $stocks = $query->orderBy('updated_at', 'desc')->paginate($perPage)->withQueryString();
 
         // Ambil semua pupuk untuk keperluan edit
         $allPupuks = Pupuk::with('kategori')
@@ -26,6 +43,12 @@ class StokController extends Controller
         return Inertia::render('Admin/Stok', [
             'stocks' => $stocks,
             'pupuks' => $allPupuks,
+            'filters' => [
+                'search' => $request->search,
+                'per_page' => $perPage,
+                'month' => $request->month,
+                'year' => $request->year
+            ]
         ]);
     }
 
@@ -94,9 +117,17 @@ class StokController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $stocks = Stok::with(['pupuk.kategori'])
-                      ->orderBy('updated_at', 'desc')
-                      ->get();
+        $query = Stok::with(['pupuk.kategori']);
+
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
+        $stocks = $query->orderBy('updated_at', 'desc')->get();
 
         $pdf = \PDF::loadView('pdf.stok', compact('stocks'));
 
@@ -105,9 +136,17 @@ class StokController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $stocks = Stok::with(['pupuk.kategori'])
-                      ->orderBy('updated_at', 'desc')
-                      ->get();
+        $query = Stok::with(['pupuk.kategori']);
+
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
+        $stocks = $query->orderBy('updated_at', 'desc')->get();
 
         $headers = ['No', 'Nama Pupuk', 'Kategori', 'Jumlah Stok', 'Stok Min', 'Stok Max', 'Lokasi Gudang', 'Status'];
 

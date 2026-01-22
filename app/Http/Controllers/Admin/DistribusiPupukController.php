@@ -13,16 +13,45 @@ use Carbon\Carbon;
 
 class DistribusiPupukController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $distribusi = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna'])
-                                   ->orderBy('created_at', 'desc')
-                                   ->get();
+        $query = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna']);
+
+        // Search functionality
+        if ($request->search) {
+            $query->where(function($q) use ($request) {
+                $q->where('nomor_distribusi', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('pupuk', function($q2) use ($request) {
+                      $q2->where('nama_pupuk', 'like', '%' . $request->search . '%');
+                  })
+                  ->orWhereHas('desa', function($q2) use ($request) {
+                      $q2->where('nama_desa', 'like', '%' . $request->search . '%')
+                         ->orWhere('kecamatan', 'like', '%' . $request->search . '%');
+                  });
+            });
+        }
+
+        // Filter by period using tanggal_distribusi
+        if ($request->month) {
+            $query->whereMonth('tanggal_distribusi', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('tanggal_distribusi', $request->year);
+        }
+
+        $perPage = $request->per_page ?? 10;
+        $distribusi = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/DistribusiPupuk', [
             'distribusi' => $distribusi,
             'pupuks' => [],
-            'desas' => []
+            'desas' => [],
+            'filters' => [
+                'search' => $request->search,
+                'per_page' => $perPage,
+                'month' => $request->month,
+                'year' => $request->year,
+            ],
         ]);
     }
 
@@ -225,9 +254,17 @@ class DistribusiPupukController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $distribusi = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna'])
-                                   ->orderBy('created_at', 'desc')
-                                   ->get();
+        $query = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna']);
+
+        // Filter by period
+        if ($request->month) {
+            $query->whereMonth('tanggal_distribusi', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('tanggal_distribusi', $request->year);
+        }
+
+        $distribusi = $query->orderBy('created_at', 'desc')->get();
 
         $pdf = \PDF::loadView('pdf.distribusi-pupuk', compact('distribusi'));
 
@@ -236,9 +273,17 @@ class DistribusiPupukController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $distribusi = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna'])
-                                   ->orderBy('created_at', 'desc')
-                                   ->get();
+        $query = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna']);
+
+        // Filter by period
+        if ($request->month) {
+            $query->whereMonth('tanggal_distribusi', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('tanggal_distribusi', $request->year);
+        }
+
+        $distribusi = $query->orderBy('created_at', 'desc')->get();
 
         $headers = ['No', 'Nomor Distribusi', 'Pupuk', 'Desa Tujuan', 'Jumlah', 'Tanggal Distribusi', 'Status', 'Penerima'];
 

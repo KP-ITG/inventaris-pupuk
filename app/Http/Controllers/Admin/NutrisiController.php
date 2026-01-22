@@ -25,6 +25,14 @@ class NutrisiController extends Controller
             });
         }
 
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
         $perPage = $request->per_page ?? 10;
         $nutrisi = $query->paginate($perPage)->withQueryString();
 
@@ -33,6 +41,8 @@ class NutrisiController extends Controller
             'filters' => [
                 'search' => $request->search,
                 'per_page' => $perPage,
+                'month' => $request->month,
+                'year' => $request->year
             ],
         ]);
     }    public function store(Request $request)
@@ -97,6 +107,14 @@ class NutrisiController extends Controller
             });
         }
 
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
         $nutrisi = $query->get();
 
         $pdf = PDF::loadView('pdf.nutrisi', compact('nutrisi'));
@@ -114,6 +132,14 @@ class NutrisiController extends Controller
                   ->orWhere('formula_kimia', 'like', '%' . $request->search . '%')
                   ->orWhere('deskripsi_nutrisi', 'like', '%' . $request->search . '%');
             });
+        }
+
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
         }
 
         $nutrisi = $query->get();

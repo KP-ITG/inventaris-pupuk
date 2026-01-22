@@ -29,6 +29,14 @@ class PupukController extends Controller
             });
         }
 
+        // Filter by period
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
         $perPage = $request->per_page ?? 10;
         $pupuks = $query->paginate($perPage)->withQueryString();
 
@@ -42,6 +50,8 @@ class PupukController extends Controller
             'filters' => [
                 'search' => $request->search,
                 'per_page' => $perPage,
+                'month' => $request->month,
+                'year' => $request->year,
             ],
         ]);
     }
@@ -144,6 +154,14 @@ class PupukController extends Controller
             });
         }
 
+        // Filter by period
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
         $pupuks = $query->get();
 
         $pdf = PDF::loadView('pdf.pupuk', compact('pupuks'));
@@ -163,6 +181,14 @@ class PupukController extends Controller
                       $q->where('nama_kategori', 'like', '%' . $request->search . '%');
                   });
             });
+        }
+
+        // Filter by period
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
         }
 
         $pupuks = $query->get();

@@ -66,6 +66,54 @@
                                 <span class="text-sm text-gray-700">data</span>
                             </div>
                         </div>
+
+                        <!-- Period Filter -->
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 pt-3 border-t border-gray-200 mt-3">
+                            <span class="text-sm font-medium text-gray-700 whitespace-nowrap">Filter Periode:</span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <select
+                                    v-model="filterMonth"
+                                    class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
+                                >
+                                    <option value="">Semua Bulan</option>
+                                    <option value="01">Januari</option>
+                                    <option value="02">Februari</option>
+                                    <option value="03">Maret</option>
+                                    <option value="04">April</option>
+                                    <option value="05">Mei</option>
+                                    <option value="06">Juni</option>
+                                    <option value="07">Juli</option>
+                                    <option value="08">Agustus</option>
+                                    <option value="09">September</option>
+                                    <option value="10">Oktober</option>
+                                    <option value="11">November</option>
+                                    <option value="12">Desember</option>
+                                </select>
+                                <select
+                                    v-model="filterYear"
+                                    class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
+                                >
+                                    <option value="">Semua Tahun</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                    <option value="2027">2027</option>
+                                </select>
+                                <button
+                                    @click="applyFilter"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-md text-sm font-medium shadow-sm"
+                                >
+                                    Terapkan
+                                </button>
+                                <button
+                                    @click="resetFilter"
+                                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-1.5 rounded-md text-sm font-medium"
+                                >
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Success/Error Messages -->
@@ -250,6 +298,8 @@ const processing = ref(false)
 // Search and pagination
 const searchQuery = ref(props.filters?.search || '')
 const perPageSelected = ref(props.filters?.per_page || 10)
+const filterMonth = ref(props.filters?.month || '')
+const filterYear = ref(props.filters?.year || '')
 
 const form = reactive({
     nama_nutrisi: '',
@@ -362,12 +412,37 @@ const updateUrl = (params) => {
     });
 };
 
+// Period filter functions
+const applyFilter = () => {
+    updateUrl({
+        month: filterMonth.value,
+        year: filterYear.value,
+        search: searchQuery.value,
+        per_page: perPageSelected.value,
+        page: 1
+    })
+}
+
+const resetFilter = () => {
+    filterMonth.value = ''
+    filterYear.value = ''
+    updateUrl({
+        month: '',
+        year: '',
+        search: searchQuery.value,
+        per_page: perPageSelected.value,
+        page: 1
+    })
+}
+
 // Export functions
 const exportPdf = () => {
     const params = new URLSearchParams({
         search: searchQuery.value || '',
         per_page: perPageSelected.value
     });
+    if (filterMonth.value) params.append('month', filterMonth.value);
+    if (filterYear.value) params.append('year', filterYear.value);
     window.open(`/admin/nutrisi/export/pdf?${params.toString()}`, '_blank');
 };
 
@@ -376,6 +451,8 @@ const exportExcel = () => {
         search: searchQuery.value || '',
         per_page: perPageSelected.value
     });
+    if (filterMonth.value) params.append('month', filterMonth.value);
+    if (filterYear.value) params.append('year', filterYear.value);
     window.location.href = `/admin/nutrisi/export/excel?${params.toString()}`;
 };
 

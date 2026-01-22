@@ -25,6 +25,14 @@ class KategoriController extends Controller
                   ->orWhere('deskripsi', 'like', '%' . $search . '%');
         }
 
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
         $kategori = $query->orderBy('nama_kategori')
                          ->paginate($perPage)
                          ->withQueryString();
@@ -33,7 +41,9 @@ class KategoriController extends Controller
             'kategori' => $kategori,
             'filters' => [
                 'search' => $search,
-                'per_page' => $perPage
+                'per_page' => $perPage,
+                'month' => $request->month,
+                'year' => $request->year
             ]
         ]);
     }
@@ -93,6 +103,14 @@ class KategoriController extends Controller
                   ->orWhere('deskripsi', 'like', '%' . $search . '%');
         }
 
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+
         $kategori = $query->orderBy($sort, $order)->get();
 
         $pdf = PDF::loadView('pdf.kategori', compact('kategori'));
@@ -111,6 +129,14 @@ class KategoriController extends Controller
         if ($search) {
             $query->where('nama_kategori', 'like', '%' . $search . '%')
                   ->orWhere('deskripsi', 'like', '%' . $search . '%');
+        }
+
+        // Period filter
+        if ($request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        if ($request->year) {
+            $query->whereYear('created_at', $request->year);
         }
 
         $kategori = $query->orderBy($sort, $order)->get();

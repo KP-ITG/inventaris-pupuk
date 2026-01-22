@@ -19,6 +19,8 @@ const selectedPupuk = ref(null);
 // Search and pagination
 const searchQuery = ref(props.filters?.search || '');
 const perPageSelected = ref(props.filters?.per_page || 10);
+const filterMonth = ref(props.filters?.month || '');
+const filterYear = ref(props.filters?.year || '');
 
 const form = ref({
     id: null,
@@ -155,11 +157,36 @@ const updateUrl = (params) => {
     });
 };
 
+const applyFilter = () => {
+    updateUrl({
+        search: searchQuery.value,
+        per_page: perPageSelected.value,
+        month: filterMonth.value,
+        year: filterYear.value,
+        page: 1
+    });
+};
+
+const resetFilter = () => {
+    filterMonth.value = '';
+    filterYear.value = '';
+    searchQuery.value = '';
+    updateUrl({
+        search: '',
+        per_page: perPageSelected.value,
+        month: '',
+        year: '',
+        page: 1
+    });
+};
+
 // Export functions
 const exportPdf = () => {
     const params = new URLSearchParams({
         search: searchQuery.value || '',
-        per_page: perPageSelected.value
+        per_page: perPageSelected.value,
+        month: filterMonth.value || '',
+        year: filterYear.value || ''
     });
     window.open(`/admin/pupuk/export/pdf?${params.toString()}`, '_blank');
 };
@@ -167,7 +194,9 @@ const exportPdf = () => {
 const exportExcel = () => {
     const params = new URLSearchParams({
         search: searchQuery.value || '',
-        per_page: perPageSelected.value
+        per_page: perPageSelected.value,
+        month: filterMonth.value || '',
+        year: filterYear.value || ''
     });
     window.location.href = `/admin/pupuk/export/excel?${params.toString()}`;
 };
@@ -236,29 +265,80 @@ const visiblePages = computed(() => {
 
                 <!-- Search and Filters -->
                 <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                        <div class="flex-1 max-w-md">
-                            <input
-                                v-model="searchQuery"
-                                @input="debouncedSearch"
-                                type="text"
-                                placeholder="Cari pupuk..."
-                                class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm"
-                            />
+                    <div class="flex flex-col gap-4">
+                        <!-- Search and Per Page -->
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                            <div class="flex-1 max-w-md">
+                                <input
+                                    v-model="searchQuery"
+                                    @input="debouncedSearch"
+                                    type="text"
+                                    placeholder="Cari pupuk..."
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm"
+                                />
+                            </div>
+                            <div class="flex items-center gap-2 whitespace-nowrap">
+                                <span class="text-sm text-gray-700">Tampilkan</span>
+                                <select
+                                    v-model="perPageSelected"
+                                    @change="changePerPage"
+                                    class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
+                                >
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="text-sm text-gray-700">data</span>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2 whitespace-nowrap">
-                            <span class="text-sm text-gray-700">Tampilkan</span>
-                            <select
-                                v-model="perPageSelected"
-                                @change="changePerPage"
-                                class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
-                            >
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                            <span class="text-sm text-gray-700">data</span>
+
+                        <!-- Period Filter -->
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 pt-3 border-t border-gray-200">
+                            <span class="text-sm font-medium text-gray-700 whitespace-nowrap">Filter Periode:</span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <select
+                                    v-model="filterMonth"
+                                    class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
+                                >
+                                    <option value="">Semua Bulan</option>
+                                    <option value="01">Januari</option>
+                                    <option value="02">Februari</option>
+                                    <option value="03">Maret</option>
+                                    <option value="04">April</option>
+                                    <option value="05">Mei</option>
+                                    <option value="06">Juni</option>
+                                    <option value="07">Juli</option>
+                                    <option value="08">Agustus</option>
+                                    <option value="09">September</option>
+                                    <option value="10">Oktober</option>
+                                    <option value="11">November</option>
+                                    <option value="12">Desember</option>
+                                </select>
+                                <select
+                                    v-model="filterYear"
+                                    class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
+                                >
+                                    <option value="">Semua Tahun</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                    <option value="2027">2027</option>
+                                </select>
+                                <button
+                                    @click="applyFilter"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-md text-sm font-medium shadow-sm"
+                                >
+                                    Terapkan
+                                </button>
+                                <button
+                                    @click="resetFilter"
+                                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-1.5 rounded-md text-sm font-medium"
+                                >
+                                    Reset
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
