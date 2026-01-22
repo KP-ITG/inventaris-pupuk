@@ -91,4 +91,58 @@ class StokController extends Controller
 
         return redirect()->back()->with('success', 'Stok berhasil dihapus');
     }
+
+    public function exportPdf(Request $request)
+    {
+        $stocks = Stok::with(['pupuk.kategori'])
+                      ->orderBy('updated_at', 'desc')
+                      ->get();
+
+        $pdf = \PDF::loadView('pdf.stok', compact('stocks'));
+
+        return $pdf->download('data-stok-' . date('Y-m-d') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $stocks = Stok::with(['pupuk.kategori'])
+                      ->orderBy('updated_at', 'desc')
+                      ->get();
+
+        $headers = ['No', 'Nama Pupuk', 'Kategori', 'Jumlah Stok', 'Stok Min', 'Stok Max', 'Lokasi Gudang', 'Status'];
+
+        $data = [];
+        foreach ($stocks as $index => $stock) {
+            $data[] = [
+                $index + 1,
+                $stock->pupuk->nama_pupuk ?? '-',
+                $stock->pupuk->kategori->nama_kategori ?? '-',
+                $stock->jumlah_stok . ' kg',
+                $stock->stok_minimum . ' kg',
+                $stock->stok_maksimum . ' kg',
+                $stock->lokasi_gudang ?? '-',
+                ucfirst(str_replace('_', ' ', $stock->status_stok))
+            ];
+        }
+
+        $filename = 'data-stok-' . date('Y-m-d') . '.csv';
+
+        $callback = function() use ($data, $headers) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, $headers, ';');
+            foreach ($data as $row) {
+                fputcsv($file, $row, ';');
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ]);
+    }
 }

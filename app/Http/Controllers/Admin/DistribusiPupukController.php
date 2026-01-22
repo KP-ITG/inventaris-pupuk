@@ -222,4 +222,58 @@ class DistribusiPupukController extends Controller
 
         return response()->json(['message' => 'Status berhasil diupdate']);
     }
+
+    public function exportPdf(Request $request)
+    {
+        $distribusi = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna'])
+                                   ->orderBy('created_at', 'desc')
+                                   ->get();
+
+        $pdf = \PDF::loadView('pdf.distribusi-pupuk', compact('distribusi'));
+
+        return $pdf->download('data-distribusi-pupuk-' . date('Y-m-d') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $distribusi = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna'])
+                                   ->orderBy('created_at', 'desc')
+                                   ->get();
+
+        $headers = ['No', 'Nomor Distribusi', 'Pupuk', 'Desa Tujuan', 'Jumlah', 'Tanggal Distribusi', 'Status', 'Penerima'];
+
+        $data = [];
+        foreach ($distribusi as $index => $item) {
+            $data[] = [
+                $index + 1,
+                $item->nomor_distribusi,
+                $item->pupuk->nama_pupuk ?? '-',
+                $item->desa->nama_desa ?? '-',
+                $item->jumlah_distribusi . ' kg',
+                $item->tanggal_distribusi ? $item->tanggal_distribusi->format('d/m/Y') : '-',
+                ucfirst(str_replace('_', ' ', $item->status_distribusi)),
+                $item->nama_penerima ?? '-'
+            ];
+        }
+
+        $filename = 'data-distribusi-pupuk-' . date('Y-m-d') . '.csv';
+
+        $callback = function() use ($data, $headers) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, $headers, ';');
+            foreach ($data as $row) {
+                fputcsv($file, $row, ';');
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ]);
+    }
 }
