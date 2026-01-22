@@ -218,9 +218,9 @@ const visiblePages = computed(() => {
                         </button>
                         <button
                             @click="openCreateModal"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center"
                         >
-                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
                             Tambah Pupuk
@@ -230,7 +230,7 @@ const visiblePages = computed(() => {
 
                 <!-- Search and Filters -->
                 <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <div class="flex justify-between items-center">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                         <div class="flex-1 max-w-md">
                             <input
                                 v-model="searchQuery"
@@ -240,12 +240,12 @@ const visiblePages = computed(() => {
                                 class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm"
                             />
                         </div>
-                        <div class="flex items-center space-x-2 ml-4">
-                            <span class="text-sm text-gray-700">Tampilkan:</span>
+                        <div class="flex items-center gap-2 whitespace-nowrap">
+                            <span class="text-sm text-gray-700">Tampilkan</span>
                             <select
                                 v-model="perPageSelected"
                                 @change="changePerPage"
-                                class="border border-gray-300 rounded-md text-sm px-2 py-1"
+                                class="border border-gray-300 rounded-md text-sm pl-3 pr-8 py-1.5 focus:ring-green-500 focus:border-green-500"
                             >
                                 <option value="10">10</option>
                                 <option value="25">25</option>
