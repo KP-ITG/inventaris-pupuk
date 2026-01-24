@@ -71,6 +71,7 @@ class StokController extends Controller
 
         $stok = Stok::create([
             'pupuk_id' => $request->pupuk_id,
+            'pengguna_id' => auth()->id(),
             'jumlah_stok' => $request->jumlah_stok,
             'stok_minimum' => $request->stok_minimum ?? 0,
             'stok_maksimum' => $request->stok_maksimum ?? 0,
@@ -96,6 +97,7 @@ class StokController extends Controller
 
         $stock->update([
             'pupuk_id' => $request->pupuk_id,
+            'pengguna_id' => auth()->id(),
             'jumlah_stok' => $request->jumlah_stok,
             'stok_minimum' => $request->stok_minimum ?? 0,
             'stok_maksimum' => $request->stok_maksimum ?? 0,

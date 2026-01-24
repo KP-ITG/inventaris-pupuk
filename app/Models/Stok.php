@@ -11,6 +11,7 @@ class Stok extends Model
 
     protected $fillable = [
         'pupuk_id',
+        'pengguna_id',
         'jumlah_stok',
         'stok_minimum',
         'stok_maksimum',
