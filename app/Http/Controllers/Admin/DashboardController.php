@@ -55,11 +55,25 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Distribusi terbaru
-        $recentDistribusi = DistribusiPupuk::with(['details.pupuk', 'desa'])
+        // Distribusi terbaru - transform untuk backward compatibility dengan frontend
+        $recentDistribusiRaw = DistribusiPupuk::with(['details.pupuk', 'desa'])
             ->latest()
             ->take(5)
             ->get();
+
+        // Transform untuk compatibility dengan frontend
+        $recentDistribusi = $recentDistribusiRaw->map(function($dist) {
+            $firstDetail = $dist->details->first();
+            return [
+                'id' => $dist->id,
+                'nomor_distribusi' => $dist->nomor_distribusi,
+                'desa' => $dist->desa,
+                'status_distribusi' => $dist->status_distribusi,
+                'pupuk' => $firstDetail ? $firstDetail->pupuk : null,
+                'jumlah_distribusi' => $dist->details->sum('jumlah_distribusi'),
+                'detail_count' => $dist->details->count()
+            ];
+        });
 
         // Statistik status distribusi
         $statusStats = [
@@ -70,11 +84,11 @@ class DashboardController extends Controller
         ];
 
         // Top 5 desa dengan distribusi terbanyak
-        $topDesa = DB::table('distribusi_pupuk')
+        $topDesaRaw = DB::table('distribusi_pupuk')
             ->join('desa', 'distribusi_pupuk.desa_id', '=', 'desa.id')
             ->leftJoin('distribusi_pupuk_detail', 'distribusi_pupuk.id', '=', 'distribusi_pupuk_detail.distribusi_pupuk_id')
             ->select(
-                'desa.id',
+                'desa.id as desa_id',
                 'desa.nama_desa',
                 'desa.kecamatan',
                 DB::raw('COUNT(DISTINCT distribusi_pupuk.id) as total_distribusi'),
@@ -84,6 +98,20 @@ class DashboardController extends Controller
             ->orderByDesc('total_distribusi')
             ->take(5)
             ->get();
+
+        // Transform untuk match frontend structure
+        $topDesa = $topDesaRaw->map(function($item) {
+            return [
+                'desa_id' => $item->desa_id,
+                'desa' => [
+                    'id' => $item->desa_id,
+                    'nama_desa' => $item->nama_desa,
+                    'kecamatan' => $item->kecamatan
+                ],
+                'total_distribusi' => $item->total_distribusi,
+                'total_pupuk' => $item->total_pupuk
+            ];
+        });
 
         return Inertia::render('Dashboard', [
             'user' => auth()->user(),
