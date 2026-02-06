@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\DistribusiPupuk;
 use App\Models\DistribusiPupukDetail;
+use App\Models\DistribusiStatusLog;
 use App\Models\Desa;
 use App\Models\Pupuk;
 use App\Models\Stok;
@@ -17,7 +18,7 @@ class DistribusiPupukController extends Controller
 {
     public function index(Request $request)
     {
-        $query = DistribusiPupuk::with(['details.pupuk', 'desa', 'pengguna']);
+        $query = DistribusiPupuk::with(['details.pupuk', 'desa', 'pengguna', 'statusLogs.user']);
 
         // Search functionality
         if ($request->search) {
@@ -111,6 +112,15 @@ class DistribusiPupukController extends Controller
 
             // Create distribusi header
             $distribusi = DistribusiPupuk::create($validated);
+
+            // Log status awal
+            DistribusiStatusLog::create([
+                'distribusi_pupuk_id' => $distribusi->id,
+                'status_lama' => null,
+                'status_baru' => $validated['status_distribusi'],
+                'user_id' => auth()->id(),
+                'keterangan' => 'Distribusi dibuat'
+            ]);
 
             // Create detail items dan kurangi stok jika perlu
             foreach ($items as $item) {
@@ -301,7 +311,7 @@ class DistribusiPupukController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $distribusiPupuk = DistribusiPupuk::findOrFail($id);
+        $distribusiPupuk = DistribusiPupuk::with('details')->findOrFail($id);
 
         $validated = $request->validate([
             'status_distribusi' => 'required|in:rencana,dalam_perjalanan,selesai,batal'
@@ -312,34 +322,61 @@ class DistribusiPupukController extends Controller
 
         // Jika tidak ada perubahan status, tidak perlu proses apapun
         if ($statusLama === $statusBaru) {
-            return response()->json(['message' => 'Status tidak berubah']);
+            return redirect()->back()->with('info', 'Status tidak berubah');
         }
 
-        $stok = Stok::where('pupuk_id', $distribusiPupuk->pupuk_id)->first();
-
-        if (!$stok) {
-            return response()->json(['error' => 'Stok pupuk tidak ditemukan'], 400);
+        // Validasi: status hanya bisa maju, tidak bisa mundur (untuk keamanan)
+        $statusOrder = ['rencana' => 1, 'dalam_perjalanan' => 2, 'selesai' => 3, 'batal' => 0];
+        if ($statusBaru !== 'batal' && $statusOrder[$statusBaru] < $statusOrder[$statusLama]) {
+            return redirect()->back()->withErrors(['status_distribusi' => 'Status tidak dapat dikembalikan ke tahap sebelumnya']);
         }
 
-        // Logic untuk mengelola stok berdasarkan perubahan status
-        $statusYangMengurangiStok = ['dalam_perjalanan', 'selesai'];
+        try {
+            DB::beginTransaction();
 
-        // Jika status lama mengurangi stok dan status baru tidak, kembalikan stok
-        if (in_array($statusLama, $statusYangMengurangiStok) && !in_array($statusBaru, $statusYangMengurangiStok)) {
-            $stok->tambahStok($distribusiPupuk->jumlah_distribusi);
-        }
-        // Jika status lama tidak mengurangi stok dan status baru mengurangi, kurangi stok
-        elseif (!in_array($statusLama, $statusYangMengurangiStok) && in_array($statusBaru, $statusYangMengurangiStok)) {
-            if ($stok->jumlah_stok < $distribusiPupuk->jumlah_distribusi) {
-                return response()->json(['error' => 'Stok pupuk tidak mencukupi'], 400);
+            // Logic untuk mengelola stok berdasarkan perubahan status
+            $statusYangMengurangiStok = ['dalam_perjalanan', 'selesai'];
+
+            // Process untuk setiap item di details
+            foreach ($distribusiPupuk->details as $detail) {
+                $stok = Stok::where('pupuk_id', $detail->pupuk_id)->first();
+
+                if (!$stok) {
+                    throw new \Exception('Stok pupuk ' . ($detail->pupuk->nama_pupuk ?? 'unknown') . ' tidak ditemukan');
+                }
+
+                // Jika status lama mengurangi stok dan status baru tidak, kembalikan stok
+                if (in_array($statusLama, $statusYangMengurangiStok) && !in_array($statusBaru, $statusYangMengurangiStok)) {
+                    $stok->tambahStok($detail->jumlah_distribusi);
+                }
+                // Jika status lama tidak mengurangi stok dan status baru mengurangi, kurangi stok
+                elseif (!in_array($statusLama, $statusYangMengurangiStok) && in_array($statusBaru, $statusYangMengurangiStok)) {
+                    if ($stok->jumlah_stok < $detail->jumlah_distribusi) {
+                        throw new \Exception('Stok ' . ($detail->pupuk->nama_pupuk ?? 'unknown') . ' tidak mencukupi (tersedia: ' . $stok->jumlah_stok . ' kg, dibutuhkan: ' . $detail->jumlah_distribusi . ' kg)');
+                    }
+                    $stok->kurangiStok($detail->jumlah_distribusi);
+                }
             }
-            $stok->kurangiStok($distribusiPupuk->jumlah_distribusi);
+
+            // Update status distribusi
+            $distribusiPupuk->update(['status_distribusi' => $statusBaru]);
+
+            // Log perubahan status
+            DistribusiStatusLog::create([
+                'distribusi_pupuk_id' => $distribusiPupuk->id,
+                'status_lama' => $statusLama,
+                'status_baru' => $statusBaru,
+                'user_id' => auth()->id(),
+                'keterangan' => 'Status diupdate dari ' . $statusLama . ' menjadi ' . $statusBaru
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Status berhasil diupdate');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(['status_distribusi' => $e->getMessage()]);
         }
-
-        // Update status distribusi
-        $distribusiPupuk->update(['status_distribusi' => $statusBaru]);
-
-        return response()->json(['message' => 'Status berhasil diupdate']);
     }
 
     public function exportPdf(Request $request)

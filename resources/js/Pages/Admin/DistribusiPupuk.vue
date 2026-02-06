@@ -167,98 +167,113 @@
 
             <!-- Table -->
             <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Nomor Distribusi
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Desa Tujuan
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Pupuk
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Jumlah
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Tanggal
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Aksi
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="item in distribusi.data" :key="item.id" class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">
-                                    {{ item.nomor_distribusi }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ item.desa?.nama_desa }}</div>
-                                <div class="text-sm text-gray-500">{{ item.desa?.kecamatan }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div v-if="item.details && item.details.length > 0">
-                                    <div v-if="item.details.length === 1" class="text-sm">
-                                        <div class="text-gray-900">{{ item.details[0].pupuk?.nama_pupuk }}</div>
-                                        <div class="text-gray-500">{{ item.details[0].pupuk?.kategori?.nama_kategori }}</div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 140px;">
+                                    Nomor Distribusi
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 180px;">
+                                    Desa Tujuan
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 250px;">
+                                    Pupuk
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">
+                                    Jumlah
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 140px;">
+                                    Tanggal
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 130px;">
+                                    Status
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 180px;">
+                                    Aksi
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-for="item in distribusi.data" :key="item.id" class="hover:bg-gray-50">
+                                <td class="px-4 py-4 align-top">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ item.nomor_distribusi }}
                                     </div>
-                                    <div v-else class="text-sm">
-                                        <div class="text-gray-900 font-medium">{{ item.details.length }} jenis pupuk:</div>
-                                        <div class="text-gray-600 mt-1">
-                                            <span v-for="(detail, idx) in item.details.slice(0, 2)" :key="detail.id">
-                                                {{ detail.pupuk?.nama_pupuk }}<span v-if="idx < Math.min(item.details.length, 2) - 1">, </span>
-                                            </span>
-                                            <span v-if="item.details.length > 2" class="text-gray-400">...</span>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <div class="text-sm font-medium text-gray-900">{{ item.desa?.nama_desa }}</div>
+                                    <div class="text-xs text-gray-500 mt-0.5">{{ item.desa?.kecamatan }}</div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <div v-if="item.details && item.details.length > 0">
+                                        <div v-if="item.details.length === 1" class="text-sm">
+                                            <div class="font-medium text-gray-900">{{ item.details[0].pupuk?.nama_pupuk }}</div>
+                                            <div class="text-xs text-gray-500 mt-0.5">{{ item.details[0].pupuk?.kategori?.nama_kategori }}</div>
+                                        </div>
+                                        <div v-else class="text-sm">
+                                            <div class="font-medium text-gray-900 mb-1">{{ item.details.length }} jenis pupuk:</div>
+                                            <div class="text-xs text-gray-600 leading-relaxed">
+                                                <span v-for="(detail, idx) in item.details.slice(0, 2)" :key="detail.id">
+                                                    {{ detail.pupuk?.nama_pupuk }}<span v-if="idx < Math.min(item.details.length, 2) - 1">, </span>
+                                                </span>
+                                                <span v-if="item.details.length > 2" class="text-gray-400">...</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div v-else class="text-sm text-gray-400">-</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div v-if="item.details && item.details.length > 0" class="text-sm text-gray-900">
-                                    {{ getTotalJumlah(item.details) }} kg
-                                    <span v-if="item.details.length > 1" class="text-gray-500 text-xs">({{ item.details.length }} item)</span>
-                                </div>
-                                <div v-else class="text-sm text-gray-400">-</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ formatDate(item.tanggal_distribusi) }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="['px-2 inline-flex text-xs leading-5 font-semibold rounded-full', getStatusClass(item.status_distribusi)]">
-                                    {{ getStatusLabel(item.status_distribusi) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <Link
-                                    :href="route('admin.distribusi-pupuk.edit', item.id)"
-                                    class="text-indigo-600 hover:text-indigo-900 mr-3"
-                                >
-                                    Edit
-                                </Link>
-                                <button
-                                    @click="deleteDistribusi(item)"
-                                    class="text-red-600 hover:text-red-900"
-                                >
-                                    Hapus
-                                </button>
-                            </td>
-                        </tr>
-                        <tr v-if="distribusi.data && distribusi.data.length === 0">
-                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                                Belum ada data distribusi pupuk
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                    <div v-else class="text-sm text-gray-400">-</div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <div v-if="item.details && item.details.length > 0">
+                                        <div class="text-sm font-semibold text-gray-900">{{ getTotalJumlah(item.details) }} kg</div>
+                                        <div v-if="item.details.length > 1" class="text-xs text-gray-500 mt-0.5">({{ item.details.length }} item)</div>
+                                    </div>
+                                    <div v-else class="text-sm text-gray-400">-</div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <div class="text-sm text-gray-900 whitespace-nowrap">{{ formatDate(item.tanggal_distribusi) }}</div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <div class="flex flex-col space-y-1.5">
+                                        <span :class="['px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full whitespace-nowrap', getStatusClass(item.status_distribusi)]">
+                                            {{ getStatusLabel(item.status_distribusi) }}
+                                        </span>
+                                        <button
+                                            v-if="item.status_logs && item.status_logs.length > 0"
+                                            @click="showTimelineModal(item)"
+                                            class="text-xs text-blue-600 hover:text-blue-800 hover:underline text-left"
+                                        >
+                                            Lihat Riwayat
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <div class="flex flex-col space-y-1.5">
+                                        <button
+                                            @click="showUpdateStatusModal(item)"
+                                            class="text-sm text-blue-600 hover:text-blue-800 hover:underline text-left"
+                                            :disabled="item.status_distribusi === 'selesai' || item.status_distribusi === 'batal'"
+                                            :class="{ 'opacity-50 cursor-not-allowed': item.status_distribusi === 'selesai' || item.status_distribusi === 'batal' }"
+                                        >
+                                            Update Status
+                                        </button>
+                                        <button
+                                            @click="deleteDistribusi(item)"
+                                            class="text-sm text-red-600 hover:text-red-800 hover:underline text-left"
+                                        >
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="distribusi.data && distribusi.data.length === 0">
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                    Belum ada data distribusi pupuk
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <!-- Pagination -->
                 <div v-if="distribusi.last_page > 1" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
@@ -386,6 +401,176 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Update Status -->
+        <div v-if="showStatusModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeStatusModal"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Update Status Distribusi
+                                </h3>
+                                <div class="mt-4">
+                                    <p class="text-sm text-gray-500 mb-4">
+                                        {{ selectedDistribusi?.nomor_distribusi }}<br>
+                                        <span class="text-xs">Desa: {{ selectedDistribusi?.desa?.nama_desa }}</span>
+                                    </p>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Status Saat Ini:</label>
+                                        <span :class="['px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full', getStatusClass(selectedDistribusi?.status_distribusi)]">
+                                            {{ getStatusLabel(selectedDistribusi?.status_distribusi) }}
+                                        </span>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Update Ke:</label>
+                                        <select
+                                            v-model="newStatus"
+                                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        >
+                                            <option value="">-- Pilih Status Baru --</option>
+                                            <option value="rencana" :disabled="!canChangeTo('rencana')">Rencana</option>
+                                            <option value="dalam_perjalanan" :disabled="!canChangeTo('dalam_perjalanan')">Dalam Perjalanan</option>
+                                            <option value="selesai" :disabled="!canChangeTo('selesai')">Selesai</option>
+                                            <option value="batal" :disabled="!canChangeTo('batal')">Batal</option>
+                                        </select>
+                                        <p class="mt-2 text-xs text-gray-500">
+                                            * Status hanya dapat berubah maju, tidak dapat dikembalikan
+                                        </p>
+                                    </div>
+
+                                    <div v-if="statusUpdateError" class="mt-3 text-sm text-red-600">
+                                        {{ statusUpdateError }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button
+                            type="button"
+                            @click="updateStatus"
+                            :disabled="!newStatus || updatingStatus"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {{ updatingStatus ? 'Memproses...' : 'Update Status' }}
+                        </button>
+                        <button
+                            type="button"
+                            @click="closeStatusModal"
+                            :disabled="updatingStatus"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                        >
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Timeline Status (Riwayat) -->
+        <div v-if="showTimelineModalState" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeTimelineModal"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Riwayat Status Pengiriman
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500 mb-4">
+                                        {{ timelineItem?.nomor_distribusi }}<br>
+                                        <span class="text-xs">Desa: {{ timelineItem?.desa?.nama_desa }}</span>
+                                    </p>
+
+                                    <!-- Timeline -->
+                                    <div class="flow-root">
+                                        <ul role="list" class="-mb-8">
+                                            <li v-for="(log, idx) in timelineItem?.status_logs" :key="log.id">
+                                                <div class="relative pb-8">
+                                                    <span v-if="idx !== timelineItem.status_logs.length - 1" class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                                    <div class="relative flex space-x-3">
+                                                        <div>
+                                                            <span :class="[
+                                                                'h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white',
+                                                                log.status_baru === 'selesai' ? 'bg-green-500' :
+                                                                log.status_baru === 'dalam_perjalanan' ? 'bg-yellow-500' :
+                                                                log.status_baru === 'rencana' ? 'bg-gray-400' :
+                                                                log.status_baru === 'batal' ? 'bg-red-500' : 'bg-gray-400'
+                                                            ]">
+                                                                <svg v-if="log.status_baru !== 'batal'" class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                                </svg>
+                                                                <svg v-else class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                                </svg>
+                                                            </span>
+                                                        </div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <div>
+                                                                <div class="text-sm">
+                                                                    <span class="font-semibold text-gray-900">{{ getStatusLabel(log.status_baru) }}</span>
+                                                                </div>
+                                                                <p class="mt-0.5 text-xs text-gray-500">
+                                                                    <svg class="inline h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                    </svg>
+                                                                    {{ formatDateTime(log.created_at) }}
+                                                                </p>
+                                                            </div>
+                                                            <div class="mt-2 text-sm text-gray-700">
+                                                                <p class="font-medium">{{ log.keterangan }}</p>
+                                                                <p v-if="log.user" class="text-xs text-gray-500 mt-1">
+                                                                    <svg class="inline h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                                    </svg>
+                                                                    {{ log.user.nama }}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button
+                            type="button"
+                            @click="closeTimelineModal"
+                            class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:text-sm"
+                        >
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </DashboardLayout>
 </template>
 
@@ -405,10 +590,107 @@ const searchQuery = ref(props.filters?.search || '')
 const perPageSelected = ref(props.filters?.per_page || 10)
 const showPreviewModal = ref(false)
 
+// Status modal state
+const showStatusModal = ref(false)
+const selectedDistribusi = ref(null)
+const newStatus = ref('')
+const updatingStatus = ref(false)
+const statusUpdateError = ref('')
+
+// Timeline modal state
+const showTimelineModalState = ref(false)
+const timelineItem = ref(null)
+
 const deleteDistribusi = (item) => {
     if (confirm(`Yakin ingin menghapus distribusi ${item.nomor_distribusi}?`)) {
         router.delete(route('admin.distribusi-pupuk.destroy', item.id))
     }
+}
+
+const showUpdateStatusModal = (item) => {
+    selectedDistribusi.value = item
+    newStatus.value = ''
+    statusUpdateError.value = ''
+    showStatusModal.value = true
+}
+
+const closeStatusModal = () => {
+    if (!updatingStatus.value) {
+        showStatusModal.value = false
+        selectedDistribusi.value = null
+        newStatus.value = ''
+        statusUpdateError.value = ''
+    }
+}
+
+const showTimelineModal = (item) => {
+    timelineItem.value = item
+    showTimelineModalState.value = true
+}
+
+const closeTimelineModal = () => {
+    showTimelineModalState.value = false
+    timelineItem.value = null
+}
+
+const formatDateTime = (dateString) => {
+    if (!dateString) return '-'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) + ' WIB'
+}
+
+const canChangeTo = (targetStatus) => {
+    if (!selectedDistribusi.value) return false
+
+    const currentStatus = selectedDistribusi.value.status_distribusi
+    const statusOrder = { 'rencana': 1, 'dalam_perjalanan': 2, 'selesai': 3, 'batal': 0 }
+
+    // Tidak bisa ubah status jika sudah selesai atau batal
+    if (currentStatus === 'selesai' || currentStatus === 'batal') {
+        return false
+    }
+
+    // Batal selalu bisa dipilih (kecuali sudah selesai/batal)
+    if (targetStatus === 'batal') {
+        return true
+    }
+
+    // Status hanya bisa maju, tidak bisa mundur
+    return statusOrder[targetStatus] > statusOrder[currentStatus]
+}
+
+const updateStatus = () => {
+    if (!newStatus.value || !selectedDistribusi.value || updatingStatus.value) return
+
+    updatingStatus.value = true
+    statusUpdateError.value = ''
+
+    router.patch(
+        route('admin.distribusi-pupuk.update-status', selectedDistribusi.value.id),
+        { status_distribusi: newStatus.value },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                showStatusModal.value = false
+                selectedDistribusi.value = null
+                newStatus.value = ''
+                statusUpdateError.value = ''
+                router.reload({ only: ['distribusi'] })
+            },
+            onError: (errors) => {
+                statusUpdateError.value = errors.status_distribusi || 'Terjadi kesalahan saat update status'
+            },
+            onFinish: () => {
+                updatingStatus.value = false
+            }
+        }
+    )
 }
 
 const applyFilter = () => {

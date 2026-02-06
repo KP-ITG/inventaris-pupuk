@@ -44,6 +44,12 @@ class DistribusiPupuk extends Model
         return $this->belongsTo(Pengguna::class);
     }
 
+    // Relasi untuk status log
+    public function statusLogs(): HasMany
+    {
+        return $this->hasMany(DistribusiStatusLog::class, 'distribusi_pupuk_id')->orderBy('created_at', 'desc');
+    }
+
     // Relasi untuk backward compatibility (ambil pupuk pertama)
     public function pupuk(): BelongsTo
     {

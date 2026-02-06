@@ -63,7 +63,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/distribusi-pupuk/export/pdf', [DistribusiPupukController::class, 'exportPdf'])->name('distribusi-pupuk.export.pdf');
         Route::get('/distribusi-pupuk/export/excel', [DistribusiPupukController::class, 'exportExcel'])->name('distribusi-pupuk.export.excel');
         Route::patch('/distribusi-pupuk/{id}/update-status', [DistribusiPupukController::class, 'updateStatus'])->name('distribusi-pupuk.update-status');
-        Route::resource('distribusi-pupuk', DistribusiPupukController::class);
+
+        // Distribusi Pupuk routes (without edit & update for security)
+        Route::get('/distribusi-pupuk', [DistribusiPupukController::class, 'index'])->name('distribusi-pupuk.index');
+        Route::get('/distribusi-pupuk/create', [DistribusiPupukController::class, 'create'])->name('distribusi-pupuk.create');
+        Route::post('/distribusi-pupuk', [DistribusiPupukController::class, 'store'])->name('distribusi-pupuk.store');
+        Route::get('/distribusi-pupuk/{distribusiPupuk}', [DistribusiPupukController::class, 'show'])->name('distribusi-pupuk.show');
+        Route::delete('/distribusi-pupuk/{distribusiPupuk}', [DistribusiPupukController::class, 'destroy'])->name('distribusi-pupuk.destroy');
 
         // Export All Data
         Route::get('/export-all', [ExportAllController::class, 'index'])->name('export-all.index');
