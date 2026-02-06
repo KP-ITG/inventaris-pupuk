@@ -319,26 +319,77 @@ class ExcelExportService
     private static function fillDistribusiSheet($sheet, $data)
     {
         $sheet->setCellValue('A1', 'DATA DISTRIBUSI PUPUK');
-        $sheet->mergeCells('A1:G1');
-        self::styleHeader($sheet, 'A1:G1');
+        $sheet->mergeCells('A1:H1');
+        self::styleHeader($sheet, 'A1:H1');
 
-        $headers = ['No', 'Nomor Distribusi', 'Desa', 'Kecamatan', 'Pupuk', 'Jumlah (kg)', 'Tanggal'];
+        $headers = ['No', 'Nomor Distribusi', 'Desa', 'Kecamatan', 'Daftar Pupuk', 'Jumlah per Item', 'Total (kg)', 'Tanggal'];
         $sheet->fromArray($headers, null, 'A3');
-        self::styleTableHeader($sheet, 'A3:G3');
+        self::styleTableHeader($sheet, 'A3:H3');
 
         $row = 4;
-        foreach ($data as $index => $item) {
-            $sheet->setCellValue('A' . $row, $index + 1);
-            $sheet->setCellValue('B' . $row, $item->nomor_distribusi);
-            $sheet->setCellValue('C' . $row, $item->desa->nama_desa ?? '-');
-            $sheet->setCellValue('D' . $row, $item->desa->kecamatan ?? '-');
-            $sheet->setCellValue('E' . $row, $item->pupuk->nama_pupuk ?? '-');
-            $sheet->setCellValue('F' . $row, $item->jumlah_distribusi);
-            $sheet->setCellValue('G' . $row, date('d/m/Y', strtotime($item->tanggal_distribusi)));
-            $row++;
+        $no = 1;
+        foreach ($data as $item) {
+            // Jika ada detail items
+            if ($item->details && $item->details->count() > 0) {
+                $firstRow = true;
+                $startRow = $row;
+
+                foreach ($item->details as $detail) {
+                    if ($firstRow) {
+                        $sheet->setCellValue('A' . $row, $no);
+                        $sheet->setCellValue('B' . $row, $item->nomor_distribusi);
+                        $sheet->setCellValue('C' . $row, $item->desa->nama_desa ?? '-');
+                        $sheet->setCellValue('D' . $row, $item->desa->kecamatan ?? '-');
+                    }
+
+                    $sheet->setCellValue('E' . $row, $detail->pupuk->nama_pupuk ?? '-');
+                    $sheet->setCellValue('F' . $row, $detail->jumlah_distribusi . ' kg');
+
+                    if ($firstRow) {
+                        $sheet->setCellValue('G' . $row, $item->details->sum('jumlah_distribusi') . ' kg');
+                        $sheet->setCellValue('H' . $row, date('d/m/Y', strtotime($item->tanggal_distribusi)));
+                    }
+
+                    $row++;
+                    $firstRow = false;
+                }
+
+                // Merge cells untuk kolom yang sama di multiple rows
+                if ($item->details->count() > 1) {
+                    $endRow = $row - 1;
+                    $sheet->mergeCells('A' . $startRow . ':A' . $endRow);
+                    $sheet->mergeCells('B' . $startRow . ':B' . $endRow);
+                    $sheet->mergeCells('C' . $startRow . ':C' . $endRow);
+                    $sheet->mergeCells('D' . $startRow . ':D' . $endRow);
+                    $sheet->mergeCells('G' . $startRow . ':G' . $endRow);
+                    $sheet->mergeCells('H' . $startRow . ':H' . $endRow);
+
+                    // Center align merged cells
+                    $sheet->getStyle('A' . $startRow . ':A' . $endRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                    $sheet->getStyle('B' . $startRow . ':B' . $endRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                    $sheet->getStyle('C' . $startRow . ':C' . $endRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                    $sheet->getStyle('D' . $startRow . ':D' . $endRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                    $sheet->getStyle('G' . $startRow . ':G' . $endRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                    $sheet->getStyle('H' . $startRow . ':H' . $endRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                }
+
+                $no++;
+            } else {
+                // Fallback untuk data lama tanpa details
+                $sheet->setCellValue('A' . $row, $no);
+                $sheet->setCellValue('B' . $row, $item->nomor_distribusi);
+                $sheet->setCellValue('C' . $row, $item->desa->nama_desa ?? '-');
+                $sheet->setCellValue('D' . $row, $item->desa->kecamatan ?? '-');
+                $sheet->setCellValue('E' . $row, 'Tidak ada item');
+                $sheet->setCellValue('F' . $row, '-');
+                $sheet->setCellValue('G' . $row, '0 kg');
+                $sheet->setCellValue('H' . $row, date('d/m/Y', strtotime($item->tanggal_distribusi)));
+                $row++;
+                $no++;
+            }
         }
 
-        self::autoSizeColumns($sheet, ['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+        self::autoSizeColumns($sheet, ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']);
     }
 
     private static function styleHeader($sheet, $range)

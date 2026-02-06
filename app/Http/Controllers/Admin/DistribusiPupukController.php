@@ -4,24 +4,26 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DistribusiPupuk;
+use App\Models\DistribusiPupukDetail;
 use App\Models\Desa;
 use App\Models\Pupuk;
 use App\Models\Stok;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DistribusiPupukController extends Controller
 {
     public function index(Request $request)
     {
-        $query = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna']);
+        $query = DistribusiPupuk::with(['details.pupuk', 'desa', 'pengguna']);
 
         // Search functionality
         if ($request->search) {
             $query->where(function($q) use ($request) {
                 $q->where('nomor_distribusi', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('pupuk', function($q2) use ($request) {
+                  ->orWhereHas('details.pupuk', function($q2) use ($request) {
                       $q2->where('nama_pupuk', 'like', '%' . $request->search . '%');
                   })
                   ->orWhereHas('desa', function($q2) use ($request) {
@@ -74,9 +76,11 @@ class DistribusiPupukController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'pupuk_id' => 'required|exists:pupuk,id',
             'desa_id' => 'required|exists:desa,id',
-            'jumlah_distribusi' => 'required|integer|min:1',
+            'items' => 'required|array|min:1',
+            'items.*.pupuk_id' => 'required|exists:pupuk,id',
+            'items.*.jumlah_distribusi' => 'required|integer|min:1',
+            'items.*.catatan_item' => 'nullable|string',
             'tanggal_distribusi' => 'required|date',
             'status_distribusi' => 'required|in:rencana,dalam_perjalanan,selesai,batal',
             'catatan' => 'nullable|string',
@@ -85,31 +89,61 @@ class DistribusiPupukController extends Controller
             'no_telepon_penerima' => 'nullable|string|max:20'
         ]);
 
-        // Cek stok
-        $stok = Stok::where('pupuk_id', $validated['pupuk_id'])->first();
-        if (!$stok || $stok->jumlah_stok < $validated['jumlah_distribusi']) {
+        try {
+            DB::beginTransaction();
+
+            // Validasi stok untuk setiap item
+            foreach ($validated['items'] as $item) {
+                $stok = Stok::where('pupuk_id', $item['pupuk_id'])->first();
+                if (!$stok || $stok->jumlah_stok < $item['jumlah_distribusi']) {
+                    $pupuk = Pupuk::find($item['pupuk_id']);
+                    throw new \Exception("Stok {$pupuk->nama_pupuk} tidak mencukupi untuk distribusi ini");
+                }
+            }
+
+            // Generate nomor distribusi
+            $validated['nomor_distribusi'] = DistribusiPupuk::generateNomorDistribusi();
+            $validated['pengguna_id'] = auth()->id();
+
+            // Hapus items dari validated untuk create distribusi header
+            $items = $validated['items'];
+            unset($validated['items']);
+
+            // Create distribusi header
+            $distribusi = DistribusiPupuk::create($validated);
+
+            // Create detail items dan kurangi stok jika perlu
+            foreach ($items as $item) {
+                DistribusiPupukDetail::create([
+                    'distribusi_pupuk_id' => $distribusi->id,
+                    'pupuk_id' => $item['pupuk_id'],
+                    'jumlah_distribusi' => $item['jumlah_distribusi'],
+                    'catatan_item' => $item['catatan_item'] ?? null
+                ]);
+
+                // Kurangi stok jika status bukan rencana atau batal
+                if (in_array($validated['status_distribusi'], ['dalam_perjalanan', 'selesai'])) {
+                    $stok = Stok::where('pupuk_id', $item['pupuk_id'])->first();
+                    $stok->kurangiStok($item['jumlah_distribusi']);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.distribusi-pupuk.index')
+                            ->with('success', 'Distribusi pupuk berhasil ditambahkan');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->back()
-                           ->with('error', 'Stok pupuk tidak mencukupi untuk distribusi ini');
+                           ->withInput()
+                           ->with('error', $e->getMessage());
         }
-
-        // Generate nomor distribusi
-        $validated['nomor_distribusi'] = DistribusiPupuk::generateNomorDistribusi();
-        $validated['pengguna_id'] = auth()->id();
-
-        $distribusi = DistribusiPupuk::create($validated);
-
-        // Kurangi stok jika status bukan rencana atau batal
-        if (in_array($validated['status_distribusi'], ['dalam_perjalanan', 'selesai'])) {
-            $stok->kurangiStok($validated['jumlah_distribusi']);
-        }
-
-        return redirect()->route('admin.distribusi-pupuk.index')
-                        ->with('success', 'Distribusi pupuk berhasil ditambahkan');
     }
 
     public function show(DistribusiPupuk $distribusiPupuk)
     {
-        $distribusiPupuk->load(['pupuk', 'desa', 'pengguna']);
+        $distribusiPupuk->load(['details.pupuk', 'desa', 'pengguna']);
 
         return Inertia::render('Admin/DistribusiPupuk/Show', [
             'distribusi' => $distribusiPupuk
@@ -127,7 +161,7 @@ class DistribusiPupukController extends Controller
         $desas = Desa::orderBy('nama_desa')->get();
 
         // Load relasi yang diperlukan
-        $distribusiPupuk->load(['pupuk', 'desa']);
+        $distribusiPupuk->load(['details.pupuk', 'desa']);
 
         // Siapkan data distribusi dengan format tanggal yang tepat
         $distribusiData = $distribusiPupuk->toArray();
@@ -154,9 +188,11 @@ class DistribusiPupukController extends Controller
     }    public function update(Request $request, DistribusiPupuk $distribusiPupuk)
     {
         $validated = $request->validate([
-            'pupuk_id' => 'required|exists:pupuk,id',
             'desa_id' => 'required|exists:desa,id',
-            'jumlah_distribusi' => 'required|integer|min:1',
+            'items' => 'required|array|min:1',
+            'items.*.pupuk_id' => 'required|exists:pupuk,id',
+            'items.*.jumlah_distribusi' => 'required|integer|min:1',
+            'items.*.catatan_item' => 'nullable|string',
             'tanggal_distribusi' => 'required|date',
             'status_distribusi' => 'required|in:rencana,dalam_perjalanan,selesai,batal',
             'catatan' => 'nullable|string',
@@ -165,48 +201,102 @@ class DistribusiPupukController extends Controller
             'no_telepon_penerima' => 'nullable|string|max:20'
         ]);
 
-        // Handle perubahan stok berdasarkan status
-        $statusLama = $distribusiPupuk->status_distribusi;
-        $statusBaru = $validated['status_distribusi'];
-        $jumlahLama = $distribusiPupuk->jumlah_distribusi;
-        $jumlahBaru = $validated['jumlah_distribusi'];
+        try {
+            DB::beginTransaction();
 
-        $stok = Stok::where('pupuk_id', $validated['pupuk_id'])->first();
+            $statusLama = $distribusiPupuk->status_distribusi;
+            $statusBaru = $validated['status_distribusi'];
 
-        // Kembalikan stok jika status lama mengurangi stok
-        if (in_array($statusLama, ['dalam_perjalanan', 'selesai'])) {
-            $stok->tambahStok($jumlahLama);
-        }
-
-        // Kurangi stok jika status baru mengurangi stok
-        if (in_array($statusBaru, ['dalam_perjalanan', 'selesai'])) {
-            if ($stok->jumlah_stok < $jumlahBaru) {
-                return redirect()->back()
-                               ->with('error', 'Stok pupuk tidak mencukupi untuk distribusi ini');
+            // Kembalikan stok untuk items lama jika status lama mengurangi stok
+            if (in_array($statusLama, ['dalam_perjalanan', 'selesai'])) {
+                foreach ($distribusiPupuk->details as $detail) {
+                    $stok = Stok::where('pupuk_id', $detail->pupuk_id)->first();
+                    if ($stok) {
+                        $stok->tambahStok($detail->jumlah_distribusi);
+                    }
+                }
             }
-            $stok->kurangiStok($jumlahBaru);
+
+            // Hapus semua detail lama
+            $distribusiPupuk->details()->delete();
+
+            // Validasi dan buat detail baru
+            foreach ($validated['items'] as $item) {
+                $stok = Stok::where('pupuk_id', $item['pupuk_id'])->first();
+
+                // Cek stok jika status baru mengurangi stok
+                if (in_array($statusBaru, ['dalam_perjalanan', 'selesai'])) {
+                    if (!$stok || $stok->jumlah_stok < $item['jumlah_distribusi']) {
+                        $pupuk = Pupuk::find($item['pupuk_id']);
+                        throw new \Exception("Stok {$pupuk->nama_pupuk} tidak mencukupi untuk distribusi ini");
+                    }
+                }
+            }
+
+            // Buat detail baru dan kurangi stok jika perlu
+            foreach ($validated['items'] as $item) {
+                DistribusiPupukDetail::create([
+                    'distribusi_pupuk_id' => $distribusiPupuk->id,
+                    'pupuk_id' => $item['pupuk_id'],
+                    'jumlah_distribusi' => $item['jumlah_distribusi'],
+                    'catatan_item' => $item['catatan_item'] ?? null
+                ]);
+
+                if (in_array($statusBaru, ['dalam_perjalanan', 'selesai'])) {
+                    $stok = Stok::where('pupuk_id', $item['pupuk_id'])->first();
+                    $stok->kurangiStok($item['jumlah_distribusi']);
+                }
+            }
+
+            // Update distribusi header
+            $items = $validated['items'];
+            unset($validated['items']);
+            $distribusiPupuk->update($validated);
+
+            DB::commit();
+
+            return redirect()->route('admin.distribusi-pupuk.index')
+                            ->with('success', 'Distribusi pupuk berhasil diperbarui');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                           ->withInput()
+                           ->with('error', $e->getMessage());
         }
-
-        $distribusiPupuk->update($validated);
-
-        return redirect()->route('admin.distribusi-pupuk.index')
-                        ->with('success', 'Distribusi pupuk berhasil diperbarui');
     }
 
     public function destroy(DistribusiPupuk $distribusiPupuk)
     {
-        // Kembalikan stok jika distribusi dalam status yang mengurangi stok
-        if (in_array($distribusiPupuk->status_distribusi, ['dalam_perjalanan', 'selesai'])) {
-            $stok = Stok::where('pupuk_id', $distribusiPupuk->pupuk_id)->first();
-            if ($stok) {
-                $stok->tambahStok($distribusiPupuk->jumlah_distribusi);
+        try {
+            DB::beginTransaction();
+
+            // Kembalikan stok jika distribusi dalam status yang mengurangi stok
+            if (in_array($distribusiPupuk->status_distribusi, ['dalam_perjalanan', 'selesai'])) {
+                foreach ($distribusiPupuk->details as $detail) {
+                    $stok = Stok::where('pupuk_id', $detail->pupuk_id)->first();
+                    if ($stok) {
+                        $stok->tambahStok($detail->jumlah_distribusi);
+                    }
+                }
             }
+
+            // Hapus details (cascade delete juga akan menghapus ini, tapi lebih baik explicit)
+            $distribusiPupuk->details()->delete();
+
+            // Hapus distribusi
+            $distribusiPupuk->delete();
+
+            DB::commit();
+
+            return redirect()->route('admin.distribusi-pupuk.index')
+                            ->with('success', 'Distribusi pupuk berhasil dihapus');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                           ->with('error', 'Gagal menghapus distribusi: ' . $e->getMessage());
         }
-
-        $distribusiPupuk->delete();
-
-        return redirect()->route('admin.distribusi-pupuk.index')
-                        ->with('success', 'Distribusi pupuk berhasil dihapus');
     }
 
     public function updateStatus(Request $request, $id)
@@ -254,7 +344,7 @@ class DistribusiPupukController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $query = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna']);
+        $query = DistribusiPupuk::with(['details.pupuk', 'desa', 'pengguna']);
 
         // Filter by period
         if ($request->month) {
@@ -267,13 +357,14 @@ class DistribusiPupukController extends Controller
         $distribusi = $query->orderBy('created_at', 'desc')->get();
 
         $pdf = \PDF::loadView('pdf.distribusi-pupuk', compact('distribusi'));
+        $pdf->setPaper('a4', 'landscape');
 
         return $pdf->download('data-distribusi-pupuk-' . date('Y-m-d') . '.pdf');
     }
 
     public function exportExcel(Request $request)
     {
-        $query = DistribusiPupuk::with(['pupuk', 'desa', 'pengguna']);
+        $query = DistribusiPupuk::with(['details.pupuk', 'desa', 'pengguna']);
 
         // Filter by period
         if ($request->month) {
@@ -285,20 +376,46 @@ class DistribusiPupukController extends Controller
 
         $distribusi = $query->orderBy('created_at', 'desc')->get();
 
-        $headers = ['No', 'Nomor Distribusi', 'Pupuk', 'Desa Tujuan', 'Jumlah', 'Tanggal Distribusi', 'Status', 'Penerima'];
+        $headers = ['No', 'Nomor Distribusi', 'Pupuk', 'Jumlah per Item', 'Total Jumlah', 'Desa Tujuan', 'Tanggal Distribusi', 'Status', 'Penerima'];
 
         $data = [];
-        foreach ($distribusi as $index => $item) {
-            $data[] = [
-                $index + 1,
-                $item->nomor_distribusi,
-                $item->pupuk->nama_pupuk ?? '-',
-                $item->desa->nama_desa ?? '-',
-                $item->jumlah_distribusi . ' kg',
-                $item->tanggal_distribusi ? $item->tanggal_distribusi->format('d/m/Y') : '-',
-                ucfirst(str_replace('_', ' ', $item->status_distribusi)),
-                $item->nama_penerima ?? '-'
-            ];
+        $no = 1;
+        foreach ($distribusi as $item) {
+            // Jika ada detail items
+            if ($item->details && $item->details->count() > 0) {
+                $firstRow = true;
+                $itemCount = $item->details->count();
+                $totalJumlah = $item->details->sum('jumlah_distribusi');
+
+                foreach ($item->details as $detail) {
+                    $data[] = [
+                        $firstRow ? $no : '',
+                        $firstRow ? $item->nomor_distribusi : '',
+                        $detail->pupuk->nama_pupuk ?? '-',
+                        $detail->jumlah_distribusi . ' kg',
+                        $firstRow ? $totalJumlah . ' kg' : '',
+                        $firstRow ? ($item->desa->nama_desa ?? '-') : '',
+                        $firstRow ? ($item->tanggal_distribusi ? $item->tanggal_distribusi->format('d/m/Y') : '-') : '',
+                        $firstRow ? ucfirst(str_replace('_', ' ', $item->status_distribusi)) : '',
+                        $firstRow ? ($item->nama_penerima ?? '-') : ''
+                    ];
+                    $firstRow = false;
+                }
+                $no++;
+            } else {
+                // Fallback untuk data lama tanpa details
+                $data[] = [
+                    $no++,
+                    $item->nomor_distribusi,
+                    '-',
+                    '-',
+                    '0 kg',
+                    $item->desa->nama_desa ?? '-',
+                    $item->tanggal_distribusi ? $item->tanggal_distribusi->format('d/m/Y') : '-',
+                    ucfirst(str_replace('_', ' ', $item->status_distribusi)),
+                    $item->nama_penerima ?? '-'
+                ];
+            }
         }
 
         $filename = 'data-distribusi-pupuk-' . date('Y-m-d') . '.csv';

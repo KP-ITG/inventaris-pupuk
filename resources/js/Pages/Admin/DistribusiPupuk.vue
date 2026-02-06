@@ -204,12 +204,30 @@
                                 <div class="text-sm text-gray-900">{{ item.desa?.nama_desa }}</div>
                                 <div class="text-sm text-gray-500">{{ item.desa?.kecamatan }}</div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ item.pupuk?.nama_pupuk }}</div>
-                                <div class="text-sm text-gray-500">{{ item.pupuk?.kategori?.nama_kategori }}</div>
+                            <td class="px-6 py-4">
+                                <div v-if="item.details && item.details.length > 0">
+                                    <div v-if="item.details.length === 1" class="text-sm">
+                                        <div class="text-gray-900">{{ item.details[0].pupuk?.nama_pupuk }}</div>
+                                        <div class="text-gray-500">{{ item.details[0].pupuk?.kategori?.nama_kategori }}</div>
+                                    </div>
+                                    <div v-else class="text-sm">
+                                        <div class="text-gray-900 font-medium">{{ item.details.length }} jenis pupuk:</div>
+                                        <div class="text-gray-600 mt-1">
+                                            <span v-for="(detail, idx) in item.details.slice(0, 2)" :key="detail.id">
+                                                {{ detail.pupuk?.nama_pupuk }}<span v-if="idx < Math.min(item.details.length, 2) - 1">, </span>
+                                            </span>
+                                            <span v-if="item.details.length > 2" class="text-gray-400">...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="text-sm text-gray-400">-</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ item.jumlah_distribusi }} kg</div>
+                                <div v-if="item.details && item.details.length > 0" class="text-sm text-gray-900">
+                                    {{ getTotalJumlah(item.details) }} kg
+                                    <span v-if="item.details.length > 1" class="text-gray-500 text-xs">({{ item.details.length }} item)</span>
+                                </div>
+                                <div v-else class="text-sm text-gray-400">-</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ formatDate(item.tanggal_distribusi) }}</div>
@@ -317,8 +335,25 @@
                                         <td class="px-4 py-2 text-sm text-gray-900">{{ index + 1 }}</td>
                                         <td class="px-4 py-2 text-sm text-gray-900">{{ item.nomor_distribusi }}</td>
                                         <td class="px-4 py-2 text-sm text-gray-900">{{ item.desa?.nama_desa }} - {{ item.desa?.kecamatan }}</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.pupuk?.nama_pupuk }}</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.jumlah_distribusi }} kg</td>
+                                        <td class="px-4 py-2 text-sm">
+                                            <div v-if="item.details && item.details.length > 0">
+                                                <div v-for="detail in item.details" :key="detail.id" class="mb-1">
+                                                    {{ detail.pupuk?.nama_pupuk }}
+                                                </div>
+                                            </div>
+                                            <div v-else class="text-gray-400">-</div>
+                                        </td>
+                                        <td class="px-4 py-2 text-sm">
+                                            <div v-if="item.details && item.details.length > 0">
+                                                <div v-for="detail in item.details" :key="detail.id" class="mb-1 text-gray-900">
+                                                    {{ detail.jumlah_distribusi }} kg
+                                                </div>
+                                                <div class="font-semibold text-gray-900 pt-1 border-t">
+                                                    Total: {{ getTotalJumlah(item.details) }} kg
+                                                </div>
+                                            </div>
+                                            <div v-else class="text-gray-400">-</div>
+                                        </td>
                                         <td class="px-4 py-2 text-sm text-gray-900">{{ formatDate(item.tanggal_distribusi) }}</td>
                                         <td class="px-4 py-2 text-sm">
                                             <span :class="['px-2 inline-flex text-xs leading-5 font-semibold rounded-full', getStatusClass(item.status_distribusi)]">
@@ -509,4 +544,10 @@ const formatDate = (dateString) => {
         day: 'numeric'
     })
 }
+
+const getTotalJumlah = (details) => {
+    if (!details || details.length === 0) return 0
+    return details.reduce((total, detail) => total + (detail.jumlah_distribusi || 0), 0)
+}
+
 </script>

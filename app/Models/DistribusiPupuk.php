@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DistribusiPupuk extends Model
 {
@@ -11,10 +12,8 @@ class DistribusiPupuk extends Model
 
     protected $fillable = [
         'nomor_distribusi',
-        'pupuk_id',
         'desa_id',
         'pengguna_id',
-        'jumlah_distribusi',
         'tanggal_distribusi',
         'tanggal_realisasi',
         'status_distribusi',
@@ -27,13 +26,12 @@ class DistribusiPupuk extends Model
     protected $casts = [
         'tanggal_distribusi' => 'date',
         'tanggal_realisasi' => 'date',
-        'jumlah_distribusi' => 'integer',
     ];
 
     // Relasi
-    public function pupuk(): BelongsTo
+    public function details(): HasMany
     {
-        return $this->belongsTo(Pupuk::class);
+        return $this->hasMany(DistribusiPupukDetail::class);
     }
 
     public function desa(): BelongsTo
@@ -44,6 +42,18 @@ class DistribusiPupuk extends Model
     public function pengguna(): BelongsTo
     {
         return $this->belongsTo(Pengguna::class);
+    }
+
+    // Relasi untuk backward compatibility (ambil pupuk pertama)
+    public function pupuk(): BelongsTo
+    {
+        return $this->belongsTo(Pupuk::class, 'id', 'id');
+    }
+
+    // Helper method untuk total jumlah distribusi
+    public function getTotalJumlahAttribute()
+    {
+        return $this->details->sum('jumlah_distribusi');
     }
 
     // Helper method untuk generate nomor distribusi

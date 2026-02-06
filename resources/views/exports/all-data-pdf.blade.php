@@ -248,12 +248,12 @@
         <thead>
             <tr>
                 <th width="5%">No</th>
-                <th width="15%">Nomor</th>
-                <th width="20%">Desa</th>
-                <th width="18%">Kecamatan</th>
-                <th width="20%">Pupuk</th>
-                <th width="12%">Jumlah (kg)</th>
-                <th width="10%">Tanggal</th>
+                <th width="13%">Nomor</th>
+                <th width="17%">Desa</th>
+                <th width="15%">Kecamatan</th>
+                <th width="25%">Daftar Pupuk</th>
+                <th width="13%">Total (kg)</th>
+                <th width="12%">Tanggal</th>
             </tr>
         </thead>
         <tbody>
@@ -263,8 +263,19 @@
                 <td>{{ $item->nomor_distribusi }}</td>
                 <td>{{ $item->desa->nama_desa ?? '-' }}</td>
                 <td>{{ $item->desa->kecamatan ?? '-' }}</td>
-                <td>{{ $item->pupuk->nama_pupuk ?? '-' }}</td>
-                <td>{{ number_format($item->jumlah_distribusi) }}</td>
+                <td>
+                    @if($item->details && $item->details->count() > 0)
+                        @foreach($item->details as $detail)
+                            <div style="margin-bottom: 2px; font-size: 8px;">
+                                • {{ $detail->pupuk->nama_pupuk ?? '-' }}
+                                <span style="float: right;">{{ number_format($detail->jumlah_distribusi) }} kg</span>
+                            </div>
+                        @endforeach
+                    @else
+                        <span style="color: #999; font-size: 8px;">Tidak ada item</span>
+                    @endif
+                </td>
+                <td style="font-weight: bold;">{{ $item->details ? number_format($item->details->sum('jumlah_distribusi')) : 0 }}</td>
                 <td>{{ date('d/m/Y', strtotime($item->tanggal_distribusi)) }}</td>
             </tr>
             @empty

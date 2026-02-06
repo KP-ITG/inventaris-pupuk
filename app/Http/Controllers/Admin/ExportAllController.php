@@ -44,7 +44,7 @@ class ExportAllController extends Controller
         $stok = $stokQuery->get();
 
         // Apply date filters for DistribusiPupuk
-        $distribusiQuery = DistribusiPupuk::with(['pupuk', 'desa']);
+        $distribusiQuery = DistribusiPupuk::with(['details.pupuk', 'desa']);
         if ($month || $year) {
             $distribusiQuery->where(function($query) use ($month, $year) {
                 if ($month) {
@@ -62,7 +62,12 @@ class ExportAllController extends Controller
             // Ambil ID yang terkait dengan transaksi
             $pupukIds = collect([]);
             $pupukIds = $pupukIds->merge($stok->pluck('pupuk_id'));
-            $pupukIds = $pupukIds->merge($distribusi->pluck('pupuk_id'));
+            // Ambil pupuk_id dari details, bukan dari distribusi langsung
+            $distribusi->each(function($dist) use (&$pupukIds) {
+                if ($dist->details) {
+                    $pupukIds = $pupukIds->merge($dist->details->pluck('pupuk_id'));
+                }
+            });
             $pupukIds = $pupukIds->unique()->values();
 
             $desaIds = $distribusi->pluck('desa_id')->unique()->values();
@@ -138,7 +143,7 @@ class ExportAllController extends Controller
         $stok = $stokQuery->orderBy('created_at', 'desc')->get();
 
         // Apply date filters for DistribusiPupuk
-        $distribusiQuery = DistribusiPupuk::with(['pupuk', 'desa']);
+        $distribusiQuery = DistribusiPupuk::with(['details.pupuk', 'desa']);
         if ($month || $year) {
             $distribusiQuery->where(function($query) use ($month, $year) {
                 if ($month) {
@@ -156,7 +161,12 @@ class ExportAllController extends Controller
             // Ambil ID yang terkait dengan transaksi
             $pupukIds = collect([]);
             $pupukIds = $pupukIds->merge($stok->pluck('pupuk_id'));
-            $pupukIds = $pupukIds->merge($distribusi->pluck('pupuk_id'));
+            // Ambil pupuk_id dari details
+            $distribusi->each(function($dist) use (&$pupukIds) {
+                if ($dist->details) {
+                    $pupukIds = $pupukIds->merge($dist->details->pluck('pupuk_id'));
+                }
+            });
             $pupukIds = $pupukIds->unique()->values();
 
             $desaIds = $distribusi->pluck('desa_id')->unique()->values();
@@ -230,7 +240,7 @@ class ExportAllController extends Controller
         $stok = $stokQuery->orderBy('created_at', 'desc')->get();
 
         // Apply date filters for DistribusiPupuk
-        $distribusiQuery = DistribusiPupuk::with(['pupuk', 'desa']);
+        $distribusiQuery = DistribusiPupuk::with(['details.pupuk', 'desa']);
         if ($month || $year) {
             $distribusiQuery->where(function($query) use ($month, $year) {
                 if ($month) {
@@ -248,6 +258,12 @@ class ExportAllController extends Controller
             // Ambil ID yang terkait dengan transaksi
             $pupukIds = collect([]);
             $pupukIds = $pupukIds->merge($stok->pluck('pupuk_id'));
+            // Ambil pupuk_id dari details
+            $distribusi->each(function($dist) use (&$pupukIds) {
+                if ($dist->details) {
+                    $pupukIds = $pupukIds->merge($dist->details->pluck('pupuk_id'));
+                }
+            });
             $pupukIds = $pupukIds->merge($distribusi->pluck('pupuk_id'));
             $pupukIds = $pupukIds->unique()->values();
 
