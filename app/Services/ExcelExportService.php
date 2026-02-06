@@ -144,4 +144,251 @@ class ExcelExportService
             ]
         );
     }
+
+    public static function exportAllData($data)
+    {
+        $spreadsheet = new Spreadsheet();
+        
+        // Remove default sheet
+        $spreadsheet->removeSheetByIndex(0);
+        
+        // Create and fill Kategori sheet
+        $sheetKategori = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Kategori');
+        $spreadsheet->addSheet($sheetKategori);
+        self::fillKategoriSheet($sheetKategori, $data['kategori']);
+        
+        // Create and fill Nutrisi sheet
+        $sheetNutrisi = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Nutrisi');
+        $spreadsheet->addSheet($sheetNutrisi);
+        self::fillNutrisiSheet($sheetNutrisi, $data['nutrisi']);
+        
+        // Create and fill Desa sheet
+        $sheetDesa = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Desa');
+        $spreadsheet->addSheet($sheetDesa);
+        self::fillDesaSheet($sheetDesa, $data['desa']);
+        
+        // Create and fill Pupuk sheet
+        $sheetPupuk = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Pupuk');
+        $spreadsheet->addSheet($sheetPupuk);
+        self::fillPupukSheet($sheetPupuk, $data['pupuk']);
+        
+        // Create and fill Stok sheet
+        $sheetStok = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Stok');
+        $spreadsheet->addSheet($sheetStok);
+        self::fillStokSheet($sheetStok, $data['stok']);
+        
+        // Create and fill Distribusi sheet
+        $sheetDistribusi = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Distribusi');
+        $spreadsheet->addSheet($sheetDistribusi);
+        self::fillDistribusiSheet($sheetDistribusi, $data['distribusi']);
+        
+        // Set active sheet to first
+        $spreadsheet->setActiveSheetIndex(0);
+        
+        // Create response
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'semua-data-inventaris-pupuk-' . date('Y-m-d') . '.xlsx';
+        
+        return response()->stream(
+            function() use ($writer) {
+                $writer->save('php://output');
+            },
+            200,
+            [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'max-age=0',
+            ]
+        );
+    }
+
+    private static function fillKategoriSheet($sheet, $data)
+    {
+        $sheet->setCellValue('A1', 'DATA KATEGORI PUPUK');
+        $sheet->mergeCells('A1:C1');
+        self::styleHeader($sheet, 'A1:C1');
+        
+        $headers = ['No', 'Nama Kategori', 'Deskripsi'];
+        $sheet->fromArray($headers, null, 'A3');
+        self::styleTableHeader($sheet, 'A3:C3');
+        
+        $row = 4;
+        foreach ($data as $index => $item) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, $item->nama_kategori);
+            $sheet->setCellValue('C' . $row, $item->deskripsi ?? '-');
+            $row++;
+        }
+        
+        self::autoSizeColumns($sheet, ['A', 'B', 'C']);
+    }
+
+    private static function fillNutrisiSheet($sheet, $data)
+    {
+        $sheet->setCellValue('A1', 'DATA NUTRISI');
+        $sheet->mergeCells('A1:D1');
+        self::styleHeader($sheet, 'A1:D1');
+        
+        $headers = ['No', 'Nama Nutrisi', 'Simbol', 'Deskripsi'];
+        $sheet->fromArray($headers, null, 'A3');
+        self::styleTableHeader($sheet, 'A3:D3');
+        
+        $row = 4;
+        foreach ($data as $index => $item) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, $item->nama_nutrisi);
+            $sheet->setCellValue('C' . $row, $item->simbol_nutrisi);
+            $sheet->setCellValue('D' . $row, $item->deskripsi_nutrisi ?? '-');
+            $row++;
+        }
+        
+        self::autoSizeColumns($sheet, ['A', 'B', 'C', 'D']);
+    }
+
+    private static function fillDesaSheet($sheet, $data)
+    {
+        $sheet->setCellValue('A1', 'DATA DESA');
+        $sheet->mergeCells('A1:E1');
+        self::styleHeader($sheet, 'A1:E1');
+        
+        $headers = ['No', 'Nama Desa', 'Kecamatan', 'Luas Wilayah (ha)', 'Jumlah Penduduk'];
+        $sheet->fromArray($headers, null, 'A3');
+        self::styleTableHeader($sheet, 'A3:E3');
+        
+        $row = 4;
+        foreach ($data as $index => $item) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, $item->nama_desa);
+            $sheet->setCellValue('C' . $row, $item->kecamatan);
+            $sheet->setCellValue('D' . $row, $item->luas_wilayah);
+            $sheet->setCellValue('E' . $row, $item->jumlah_penduduk);
+            $row++;
+        }
+        
+        self::autoSizeColumns($sheet, ['A', 'B', 'C', 'D', 'E']);
+    }
+
+    private static function fillPupukSheet($sheet, $data)
+    {
+        $sheet->setCellValue('A1', 'DATA PUPUK');
+        $sheet->mergeCells('A1:E1');
+        self::styleHeader($sheet, 'A1:E1');
+        
+        $headers = ['No', 'Nama Pupuk', 'Kategori', 'Harga Jual (Rp)', 'Nutrisi'];
+        $sheet->fromArray($headers, null, 'A3');
+        self::styleTableHeader($sheet, 'A3:E3');
+        
+        $row = 4;
+        foreach ($data as $index => $item) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, $item->nama_pupuk);
+            $sheet->setCellValue('C' . $row, $item->kategori->nama_kategori ?? '-');
+            $sheet->setCellValue('D' . $row, 'Rp ' . number_format($item->harga_jual ?? 0, 0, ',', '.'));
+            $nutrisiList = $item->nutrisi->pluck('nama_nutrisi')->implode(', ');
+            $sheet->setCellValue('E' . $row, $nutrisiList ?: '-');
+            $row++;
+        }
+        
+        self::autoSizeColumns($sheet, ['A', 'B', 'C', 'D', 'E']);
+    }
+
+    private static function fillStokSheet($sheet, $data)
+    {
+        $sheet->setCellValue('A1', 'DATA STOK PUSAT');
+        $sheet->mergeCells('A1:F1');
+        self::styleHeader($sheet, 'A1:F1');
+        
+        $headers = ['No', 'Nama Pupuk', 'Jumlah Stok (kg)', 'Min (kg)', 'Max (kg)', 'Lokasi Gudang'];
+        $sheet->fromArray($headers, null, 'A3');
+        self::styleTableHeader($sheet, 'A3:F3');
+        
+        $row = 4;
+        foreach ($data as $index => $item) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, $item->pupuk->nama_pupuk ?? '-');
+            $sheet->setCellValue('C' . $row, $item->jumlah_stok);
+            $sheet->setCellValue('D' . $row, $item->stok_minimum);
+            $sheet->setCellValue('E' . $row, $item->stok_maksimum);
+            $sheet->setCellValue('F' . $row, $item->lokasi_gudang ?? '-');
+            $row++;
+        }
+        
+        self::autoSizeColumns($sheet, ['A', 'B', 'C', 'D', 'E', 'F']);
+    }
+
+    private static function fillDistribusiSheet($sheet, $data)
+    {
+        $sheet->setCellValue('A1', 'DATA DISTRIBUSI PUPUK');
+        $sheet->mergeCells('A1:G1');
+        self::styleHeader($sheet, 'A1:G1');
+        
+        $headers = ['No', 'Nomor Distribusi', 'Desa', 'Kecamatan', 'Pupuk', 'Jumlah (kg)', 'Tanggal'];
+        $sheet->fromArray($headers, null, 'A3');
+        self::styleTableHeader($sheet, 'A3:G3');
+        
+        $row = 4;
+        foreach ($data as $index => $item) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, $item->nomor_distribusi);
+            $sheet->setCellValue('C' . $row, $item->desa->nama_desa ?? '-');
+            $sheet->setCellValue('D' . $row, $item->desa->kecamatan ?? '-');
+            $sheet->setCellValue('E' . $row, $item->pupuk->nama_pupuk ?? '-');
+            $sheet->setCellValue('F' . $row, $item->jumlah_distribusi);
+            $sheet->setCellValue('G' . $row, date('d/m/Y', strtotime($item->tanggal_distribusi)));
+            $row++;
+        }
+        
+        self::autoSizeColumns($sheet, ['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+    }
+
+    private static function styleHeader($sheet, $range)
+    {
+        $sheet->getStyle($range)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 14,
+                'color' => ['rgb' => 'FFFFFF']
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '059669']
+            ]
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(25);
+    }
+
+    private static function styleTableHeader($sheet, $range)
+    {
+        $sheet->getStyle($range)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF']
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '10B981']
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000']
+                ]
+            ]
+        ]);
+    }
+
+    private static function autoSizeColumns($sheet, $columns)
+    {
+        foreach ($columns as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+    }
 }

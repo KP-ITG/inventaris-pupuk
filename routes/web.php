@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\NutrisiController;
 use App\Http\Controllers\Admin\DesaController;
 use App\Http\Controllers\Admin\DistribusiPupukController;
+use App\Http\Controllers\Admin\ExportAllController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
@@ -63,6 +64,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/distribusi-pupuk/export/excel', [DistribusiPupukController::class, 'exportExcel'])->name('distribusi-pupuk.export.excel');
         Route::patch('/distribusi-pupuk/{id}/update-status', [DistribusiPupukController::class, 'updateStatus'])->name('distribusi-pupuk.update-status');
         Route::resource('distribusi-pupuk', DistribusiPupukController::class);
+
+        // Export All Data
+        Route::get('/export-all', [ExportAllController::class, 'index'])->name('export-all.index');
+        Route::get('/export-all/pdf', [ExportAllController::class, 'exportPdf'])->name('export-all.pdf');
+        Route::get('/export-all/excel', [ExportAllController::class, 'exportExcel'])->name('export-all.excel');
     });
 });
 
