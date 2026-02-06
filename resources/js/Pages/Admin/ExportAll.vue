@@ -159,7 +159,7 @@
                 <div v-if="previewModal.show" class="fixed z-50 inset-0 overflow-y-auto">
                     <div class="flex items-center justify-center min-h-screen px-4">
                         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closePreview"></div>
-                        
+
                         <div class="relative bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-hidden">
                             <!-- Header -->
                             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
@@ -422,7 +422,7 @@ const closePreview = () => {
 }
 
 const getTotalData = () => {
-    return props.summary.kategori + props.summary.nutrisi + props.summary.pupuk + 
+    return props.summary.kategori + props.summary.nutrisi + props.summary.pupuk +
            props.summary.desa + props.summary.stok + props.summary.distribusi
 }
 
@@ -430,9 +430,9 @@ const executeExport = () => {
     const params = new URLSearchParams()
     if (filterMonth.value) params.append('month', filterMonth.value)
     if (filterYear.value) params.append('year', filterYear.value)
-    
+
     const queryString = params.toString()
-    
+
     if (previewModal.type === 'pdf') {
         window.open(`/admin/export-all/pdf${queryString ? '?' + queryString : ''}`, '_blank')
     } else {

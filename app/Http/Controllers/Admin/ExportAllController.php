@@ -28,7 +28,7 @@ class ExportAllController extends Controller
         // Get filter parameters
         $month = $request->input('month');
         $year = $request->input('year');
-        
+
         // Apply date filters for Stok
         $stokQuery = Stok::with('pupuk');
         if ($month || $year) {
@@ -42,7 +42,7 @@ class ExportAllController extends Controller
             });
         }
         $stok = $stokQuery->get();
-        
+
         // Apply date filters for DistribusiPupuk
         $distribusiQuery = DistribusiPupuk::with(['pupuk', 'desa']);
         if ($month || $year) {
@@ -64,20 +64,20 @@ class ExportAllController extends Controller
             $pupukIds = $pupukIds->merge($stok->pluck('pupuk_id'));
             $pupukIds = $pupukIds->merge($distribusi->pluck('pupuk_id'));
             $pupukIds = $pupukIds->unique()->values();
-            
+
             $desaIds = $distribusi->pluck('desa_id')->unique()->values();
-            
+
             // Filter data master berdasarkan ID yang terkait
             $pupuk = Pupuk::with(['kategori', 'nutrisi'])->whereIn('id', $pupukIds)->get();
             $kategoriIds = $pupuk->pluck('kategori_id')->unique()->values();
             $kategori = KategoriPupuk::whereIn('id', $kategoriIds)->get();
-            
+
             // Ambil nutrisi yang terkait dengan pupuk yang ada
             $nutrisiIds = $pupuk->flatMap(function($p) {
                 return $p->nutrisi->pluck('id');
             })->unique()->values();
             $nutrisi = Nutrisi::whereIn('id', $nutrisiIds)->get();
-            
+
             $desa = Desa::whereIn('id', $desaIds)->get();
         } else {
             // Jika tidak ada filter, tampilkan semua data
@@ -122,7 +122,7 @@ class ExportAllController extends Controller
         // Get filter parameters
         $month = $request->input('month');
         $year = $request->input('year');
-        
+
         // Apply date filters for Stok
         $stokQuery = Stok::with('pupuk');
         if ($month || $year) {
@@ -136,7 +136,7 @@ class ExportAllController extends Controller
             });
         }
         $stok = $stokQuery->orderBy('created_at', 'desc')->get();
-        
+
         // Apply date filters for DistribusiPupuk
         $distribusiQuery = DistribusiPupuk::with(['pupuk', 'desa']);
         if ($month || $year) {
@@ -158,20 +158,20 @@ class ExportAllController extends Controller
             $pupukIds = $pupukIds->merge($stok->pluck('pupuk_id'));
             $pupukIds = $pupukIds->merge($distribusi->pluck('pupuk_id'));
             $pupukIds = $pupukIds->unique()->values();
-            
+
             $desaIds = $distribusi->pluck('desa_id')->unique()->values();
-            
+
             // Filter data master berdasarkan ID yang terkait
             $pupuk = Pupuk::with(['kategori', 'nutrisi'])->whereIn('id', $pupukIds)->orderBy('nama_pupuk')->get();
             $kategoriIds = $pupuk->pluck('kategori_id')->unique()->values();
             $kategori = KategoriPupuk::whereIn('id', $kategoriIds)->orderBy('nama_kategori')->get();
-            
+
             // Ambil nutrisi yang terkait dengan pupuk yang ada
             $nutrisiIds = $pupuk->flatMap(function($p) {
                 return $p->nutrisi->pluck('id');
             })->unique()->values();
             $nutrisi = Nutrisi::whereIn('id', $nutrisiIds)->orderBy('nama_nutrisi')->get();
-            
+
             $desa = Desa::whereIn('id', $desaIds)->orderBy('nama_desa')->get();
         } else {
             // Jika tidak ada filter, tampilkan semua data
@@ -199,13 +199,13 @@ class ExportAllController extends Controller
         $pdf->setOption('chroot', public_path());
         $pdf->setOption('enable_php', false);
         $pdf->setOption('debugKeepTemp', false);
-        
+
         $filename = 'semua-data-inventaris-pupuk';
         if ($month || $year) {
             $filename .= '-' . ($year ?: 'semua-tahun') . '-' . ($month ?: 'semua-bulan');
         }
         $filename .= '-' . now()->format('Y-m-d') . '.pdf';
-        
+
         return $pdf->download($filename);
     }
 
@@ -214,7 +214,7 @@ class ExportAllController extends Controller
         // Get filter parameters
         $month = $request->input('month');
         $year = $request->input('year');
-        
+
         // Apply date filters for Stok
         $stokQuery = Stok::with('pupuk');
         if ($month || $year) {
@@ -228,7 +228,7 @@ class ExportAllController extends Controller
             });
         }
         $stok = $stokQuery->orderBy('created_at', 'desc')->get();
-        
+
         // Apply date filters for DistribusiPupuk
         $distribusiQuery = DistribusiPupuk::with(['pupuk', 'desa']);
         if ($month || $year) {
@@ -250,20 +250,20 @@ class ExportAllController extends Controller
             $pupukIds = $pupukIds->merge($stok->pluck('pupuk_id'));
             $pupukIds = $pupukIds->merge($distribusi->pluck('pupuk_id'));
             $pupukIds = $pupukIds->unique()->values();
-            
+
             $desaIds = $distribusi->pluck('desa_id')->unique()->values();
-            
+
             // Filter data master berdasarkan ID yang terkait
             $pupuk = Pupuk::with(['kategori', 'nutrisi'])->whereIn('id', $pupukIds)->orderBy('nama_pupuk')->get();
             $kategoriIds = $pupuk->pluck('kategori_id')->unique()->values();
             $kategori = KategoriPupuk::whereIn('id', $kategoriIds)->orderBy('nama_kategori')->get();
-            
+
             // Ambil nutrisi yang terkait dengan pupuk yang ada
             $nutrisiIds = $pupuk->flatMap(function($p) {
                 return $p->nutrisi->pluck('id');
             })->unique()->values();
             $nutrisi = Nutrisi::whereIn('id', $nutrisiIds)->orderBy('nama_nutrisi')->get();
-            
+
             $desa = Desa::whereIn('id', $desaIds)->orderBy('nama_desa')->get();
         } else {
             // Jika tidak ada filter, tampilkan semua data
@@ -300,7 +300,7 @@ class ExportAllController extends Controller
         } elseif ($year) {
             return 'Tahun ' . $year . ' (Semua Bulan)';
         }
-        
+
         return 'Semua Periode';
     }
 }

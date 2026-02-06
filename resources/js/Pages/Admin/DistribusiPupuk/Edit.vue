@@ -151,7 +151,7 @@
 
                     <!-- Informasi Penerima -->
                     <div class="border-t border-gray-200 pt-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Penerima (Opsional)</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Penerima</h3>
 
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div>
@@ -163,8 +163,9 @@
                                         id="nama_penerima"
                                         v-model="form.nama_penerima"
                                         type="text"
-                                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                                        placeholder="Nama lengkap penerima"
+                                        readonly
+                                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed sm:text-sm"
+                                        placeholder="Pilih desa terlebih dahulu"
                                     >
                                 </div>
                             </div>
@@ -178,8 +179,9 @@
                                         id="jabatan_penerima"
                                         v-model="form.jabatan_penerima"
                                         type="text"
-                                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                                        placeholder="Jabatan penerima"
+                                        readonly
+                                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed sm:text-sm"
+                                        placeholder="Pilih desa terlebih dahulu"
                                     >
                                 </div>
                             </div>
@@ -194,8 +196,9 @@
                                     id="no_telepon_penerima"
                                     v-model="form.no_telepon_penerima"
                                     type="tel"
-                                    class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                                    placeholder="08xxxxxxxxxx"
+                                    readonly
+                                    class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed sm:text-sm"
+                                    placeholder="Pilih desa terlebih dahulu"
                                 >
                             </div>
                         </div>
@@ -352,6 +355,14 @@ const selectDesa = (desa) => {
     selectedDesa.value = desa
     form.desa_id = desa.id
     desaSearch.value = `${desa.nama_desa} - ${desa.kecamatan}`
+
+    // Auto-fill penerima dengan nama kepala desa
+    if (desa.nama_kepala_desa) {
+        form.nama_penerima = desa.nama_kepala_desa
+        form.jabatan_penerima = 'Kepala Desa'
+        form.no_telepon_penerima = desa.no_telepon || ''
+    }
+
     showDesaDropdown.value = false
 }
 
