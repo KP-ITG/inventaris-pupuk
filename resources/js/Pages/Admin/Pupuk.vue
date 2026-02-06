@@ -12,6 +12,7 @@ const props = defineProps({
 
 const showModal = ref(false);
 const showDetailModal = ref(false);
+const showPreviewModal = ref(false);
 const editMode = ref(false);
 const processing = ref(false);
 const selectedPupuk = ref(null);
@@ -189,6 +190,7 @@ const exportPdf = () => {
         year: filterYear.value || ''
     });
     window.open(`/admin/pupuk/export/pdf?${params.toString()}`, '_blank');
+    showPreviewModal.value = false;
 };
 
 const exportExcel = () => {
@@ -199,7 +201,19 @@ const exportExcel = () => {
         year: filterYear.value || ''
     });
     window.location.href = `/admin/pupuk/export/excel?${params.toString()}`;
+    showPreviewModal.value = false;
 };
+
+// Helper function
+const formatDate = (dateString) => {
+    if (!dateString) return '-'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    })
+}
 
 // Pagination computed
 const visiblePages = computed(() => {
@@ -234,22 +248,14 @@ const visiblePages = computed(() => {
                     </div>
                     <div class="flex items-center space-x-2">
                         <button
-                            @click="exportPdf"
-                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
+                            @click="showPreviewModal = true"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
                         >
                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                            PDF
-                        </button>
-                        <button
-                            @click="exportExcel"
-                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
-                        >
-                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Excel
+                            Export
                         </button>
                         <button
                             @click="openCreateModal"
@@ -661,6 +667,76 @@ const visiblePages = computed(() => {
                             class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:w-auto sm:text-sm"
                         >
                             Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Export Modal -->
+        <div v-if="showPreviewModal" class="fixed z-50 inset-0 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showPreviewModal = false"></div>
+
+                <div class="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Preview Data Export</h3>
+                            <p class="text-sm text-gray-500 mt-1">Total: {{ pupuks.data?.length || 0 }} data akan di-export</p>
+                        </div>
+                        <button @click="showPreviewModal = false" class="text-gray-400 hover:text-gray-500">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 180px);">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 border">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama Pupuk</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kode</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Harga</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Stok Tersedia</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Dibuat</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr v-for="(item, index) in pupuks.data" :key="item.id" class="hover:bg-gray-50">
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ index + 1 }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.nama_pupuk }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.kode_pupuk || '-' }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.kategori?.nama_kategori || '-' }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.supplier?.nama_supplier || '-' }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">Rp {{ Number(item.harga_jual).toLocaleString('id-ID') }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.stok?.jumlah_stok || 0 }} kg</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ formatDate(item.created_at) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-2">
+                        <button @click="showPreviewModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            Tutup
+                        </button>
+                        <button @click="exportPdf" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Export PDF
+                        </button>
+                        <button @click="exportExcel" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Export Excel
                         </button>
                     </div>
                 </div>

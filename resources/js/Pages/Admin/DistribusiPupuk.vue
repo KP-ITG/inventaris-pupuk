@@ -6,22 +6,14 @@
                 <h1 class="text-3xl font-bold text-gray-900">Distribusi Pupuk ke Desa</h1>
                 <div class="flex items-center space-x-2">
                     <button
-                        @click="exportPdf"
-                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
+                        @click="showPreviewModal = true"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
                     >
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        PDF
-                    </button>
-                    <button
-                        @click="exportExcel"
-                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
-                    >
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Excel
+                        Export
                     </button>
                     <Link
                         :href="route('admin.distribusi-pupuk.create')"
@@ -287,6 +279,78 @@
                 </div>
             </div>
         </div>
+
+        <!-- Preview Export Modal -->
+        <div v-if="showPreviewModal" class="fixed z-50 inset-0 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showPreviewModal = false"></div>
+
+                <div class="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Preview Data Export</h3>
+                            <p class="text-sm text-gray-500 mt-1">Total: {{ (distribusi.data || distribusi).length }} data akan di-export</p>
+                        </div>
+                        <button @click="showPreviewModal = false" class="text-gray-400 hover:text-gray-500">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 180px);">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 border">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nomor Distribusi</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Desa Tujuan</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pupuk</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Distribusi</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr v-for="(item, index) in (distribusi.data || distribusi)" :key="item.id" class="hover:bg-gray-50">
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ index + 1 }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.nomor_distribusi }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.desa?.nama_desa }} - {{ item.desa?.kecamatan }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.pupuk?.nama_pupuk }}</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ item.jumlah_distribusi }} kg</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">{{ formatDate(item.tanggal_distribusi) }}</td>
+                                        <td class="px-4 py-2 text-sm">
+                                            <span :class="['px-2 inline-flex text-xs leading-5 font-semibold rounded-full', getStatusClass(item.status_distribusi)]">
+                                                {{ getStatusLabel(item.status_distribusi) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-2">
+                        <button @click="showPreviewModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            Tutup
+                        </button>
+                        <button @click="exportPdf" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Export PDF
+                        </button>
+                        <button @click="exportExcel" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Export Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </DashboardLayout>
 </template>
 
@@ -304,6 +368,7 @@ const filterMonth = ref(props.filters?.month || '')
 const filterYear = ref(props.filters?.year || '')
 const searchQuery = ref(props.filters?.search || '')
 const perPageSelected = ref(props.filters?.per_page || 10)
+const showPreviewModal = ref(false)
 
 const deleteDistribusi = (item) => {
     if (confirm(`Yakin ingin menghapus distribusi ${item.nomor_distribusi}?`)) {
@@ -424,6 +489,7 @@ const exportPdf = () => {
     if (filterMonth.value) params.append('month', filterMonth.value);
     if (filterYear.value) params.append('year', filterYear.value);
     window.location.href = route('admin.distribusi-pupuk.export.pdf') + (params.toString() ? '?' + params.toString() : '');
+    showPreviewModal.value = false;
 };
 
 const exportExcel = () => {
@@ -431,6 +497,7 @@ const exportExcel = () => {
     if (filterMonth.value) params.append('month', filterMonth.value);
     if (filterYear.value) params.append('year', filterYear.value);
     window.location.href = route('admin.distribusi-pupuk.export.excel') + (params.toString() ? '?' + params.toString() : '');
+    showPreviewModal.value = false;
 };
 
 const formatDate = (dateString) => {
