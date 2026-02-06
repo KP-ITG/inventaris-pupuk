@@ -127,7 +127,7 @@ const formatDate = (dateString) => {
                             <div class="ml-5 w-0 flex-1">
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">
-                                        Total Stok Pusat
+                                        Total Stok
                                     </dt>
                                     <dd class="text-2xl font-bold text-gray-900">
                                         {{ (stats?.total_stok || 0).toLocaleString() }} kg

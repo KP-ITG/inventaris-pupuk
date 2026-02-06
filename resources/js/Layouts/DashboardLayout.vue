@@ -19,7 +19,7 @@ const pageTitle = computed(() => {
     if (url.startsWith('/admin/nutrisi')) return 'Nutrisi';
     if (url.startsWith('/admin/pupuk')) return 'Pupuk';
     if (url.startsWith('/admin/desa')) return 'Data Desa';
-    if (url.startsWith('/admin/stok')) return 'Stok Pusat';
+    if (url.startsWith('/admin/stok')) return 'Stok';
     if (url.startsWith('/admin/distribusi-pupuk')) return 'Distribusi Pupuk';
     if (url.startsWith('/admin/export-all')) return 'Export Semua Data';
 
@@ -80,7 +80,7 @@ const pageTitle = computed(() => {
                 current: page.url.startsWith('/admin/desa')
             },
             {
-                name: 'Stok Pusat',
+                name: 'Stok',
                 href: '/admin/stok',
                 icon: 'M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v2a1 1 0 01-1 1h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V8H3a1 1 0 01-1-1V5a1 1 0 011-1h4z',
                 current: page.url.startsWith('/admin/stok')

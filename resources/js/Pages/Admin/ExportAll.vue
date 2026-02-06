@@ -299,7 +299,7 @@
                                     <div>
                                         <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
                                             <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm mr-2">{{ summary.stok }}</span>
-                                            Data Stok Pusat
+                                            Data Stok
                                         </h4>
                                         <div class="overflow-x-auto border rounded-lg">
                                             <table class="min-w-full divide-y divide-gray-200">

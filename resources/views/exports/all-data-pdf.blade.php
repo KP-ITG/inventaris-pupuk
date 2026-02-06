@@ -214,7 +214,7 @@
     </table>
 
     <!-- STOK -->
-    <div class="section-title">5. DATA STOK PUSAT</div>
+    <div class="section-title">5. DATA STOK</div>
     <table>
         <thead>
             <tr>

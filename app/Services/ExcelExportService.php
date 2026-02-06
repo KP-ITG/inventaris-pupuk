@@ -294,7 +294,7 @@ class ExcelExportService
 
     private static function fillStokSheet($sheet, $data)
     {
-        $sheet->setCellValue('A1', 'DATA STOK PUSAT');
+        $sheet->setCellValue('A1', 'DATA STOK');
         $sheet->mergeCells('A1:F1');
         self::styleHeader($sheet, 'A1:F1');
 
