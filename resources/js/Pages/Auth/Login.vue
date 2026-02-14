@@ -188,18 +188,18 @@ const submit = () => {
                             </PrimaryButton>
                         </div>
 
-                        <!-- Register link di-hide untuk sistem internal -->
-                        <!-- <div class="text-center border-t border-gray-200 pt-6">
+                        <!-- Register link -->
+                        <div class="text-center border-t border-gray-200 pt-6">
                             <p class="text-sm text-gray-600">
                                 Belum memiliki akun?
                                 <Link
                                     :href="route('register')"
                                     class="font-medium text-green-600 hover:text-green-500 ml-1 transition-colors"
                                 >
-                                    Daftar sebagai distributor
+                                    Daftar sebagai Kepala Desa
                                 </Link>
                             </p>
-                        </div> -->
+                        </div>
                     </form>
                 </div>
 

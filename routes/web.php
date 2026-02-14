@@ -8,7 +8,9 @@ use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\NutrisiController;
 use App\Http\Controllers\Admin\DesaController;
 use App\Http\Controllers\Admin\DistribusiPupukController;
+use App\Http\Controllers\Admin\PermintaanController as AdminPermintaanController;
 use App\Http\Controllers\Admin\ExportAllController;
+use App\Http\Controllers\KepalaDesa\DashboardController as KepalaDesa_DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
@@ -17,19 +19,29 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     if (Auth::check()) {
+        $user = Auth::user();
+
+        // Redirect based on role
+        if ($user->role === 'kepala_desa') {
+            return redirect()->route('kepala-desa.dashboard');
+        }
+
         return redirect()->route('dashboard');
     }
     return redirect()->route('login');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    // Admin and Distributor Dashboard
+    Route::middleware('role:admin,distributor')
+        ->get('/dashboard', [AdminDashboardController::class, 'index'])
+        ->name('dashboard');
 
     // Admin only routes
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         // User management
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
-        Route::get('/users/validations', [UserController::class, 'validations'])->name('users.validations');
+        Route::get('/users/approvals', [UserController::class, 'approvals'])->name('users.approvals');
         Route::patch('/users/{id}/approve', [UserController::class, 'approve'])->name('users.approve');
         Route::patch('/users/{id}/reject', [UserController::class, 'reject'])->name('users.reject');
         Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
@@ -75,6 +87,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/export-all', [ExportAllController::class, 'index'])->name('export-all.index');
         Route::get('/export-all/pdf', [ExportAllController::class, 'exportPdf'])->name('export-all.pdf');
         Route::get('/export-all/excel', [ExportAllController::class, 'exportExcel'])->name('export-all.excel');
+
+        // Permintaan Distribusi management
+        Route::get('/permintaan', [AdminPermintaanController::class, 'index'])->name('permintaan.index');
+        Route::patch('/permintaan/{id}/approve', [AdminPermintaanController::class, 'approve'])->name('permintaan.approve');
+        Route::patch('/permintaan/{id}/reject', [AdminPermintaanController::class, 'reject'])->name('permintaan.reject');
+    });
+
+    // Kepala Desa routes
+    Route::middleware('role:kepala_desa')->prefix('kepala-desa')->name('kepala-desa.')->group(function () {
+        Route::get('/dashboard', [KepalaDesa_DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/ajukan-permintaan', [KepalaDesa_DashboardController::class, 'ajukanPermintaan'])->name('ajukan-permintaan');
+        Route::get('/histori-permintaan', [KepalaDesa_DashboardController::class, 'historiPermintaan'])->name('histori-permintaan');
+        Route::post('/permintaan', [KepalaDesa_DashboardController::class, 'store'])->name('permintaan.store');
     });
 });
 

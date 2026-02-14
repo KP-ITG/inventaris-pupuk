@@ -100,17 +100,17 @@ const getStatusColor = (status) => {
 </script>
 
 <template>
-    <Head title="Manajemen Users" />
+    <Head title="Approval User Baru" />
 
     <DashboardLayout>
         <div class="space-y-6">
             <div class="bg-white shadow rounded-lg">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h2 class="text-lg font-medium text-gray-900">
-                        {{ isValidationPage ? 'Validasi Pendaftaran User' : 'Manajemen Users' }}
+                        Approval User Baru
                     </h2>
                     <p class="mt-1 text-sm text-gray-600">
-                        {{ isValidationPage ? 'Review dan setujui pendaftaran user baru' : 'Kelola akun pengguna dan persetujuan registrasi' }}
+                        Review dan setujui pendaftaran user baru yang menunggu persetujuan
                     </p>
                 </div>
 
@@ -168,8 +168,8 @@ const getStatusColor = (status) => {
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span :class="[getStatusColor(user.status), 'inline-flex px-2 py-1 text-xs font-semibold rounded-full']">
-                                        {{ user.status === 'approved' ? 'Approved' : user.status === 'pending' ? 'Pending' : 'Rejected' }}
+                                    <span class="bg-yellow-100 text-yellow-800 inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                                        Pending
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
@@ -179,7 +179,7 @@ const getStatusColor = (status) => {
                                     {{ user.kontak || '-' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div v-if="user.status === 'pending'" class="flex space-x-2">
+                                    <div class="flex space-x-2">
                                         <button
                                             @click="approveUser(user.id)"
                                             :disabled="processing"
@@ -194,15 +194,6 @@ const getStatusColor = (status) => {
                                         >
                                             Reject
                                         </button>
-                                    </div>
-                                    <div v-else-if="user.status === 'approved'" class="text-green-600 text-xs">
-                                        ✓ Approved
-                                    </div>
-                                    <div v-else class="flex flex-col">
-                                        <span class="text-red-600 text-xs">✗ Rejected</span>
-                                        <span v-if="user.alasan_penolakan" class="text-xs text-gray-500 mt-1">
-                                            {{ user.alasan_penolakan }}
-                                        </span>
                                     </div>
                                 </td>
                             </tr>
@@ -243,8 +234,8 @@ const getStatusColor = (status) => {
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                     </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada users</h3>
-                    <p class="mt-1 text-sm text-gray-500">Belum ada user yang terdaftar dalam sistem.</p>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada user yang menunggu approval</h3>
+                    <p class="mt-1 text-sm text-gray-500">Saat ini tidak ada user pending yang perlu diproses.</p>
                 </div>
             </div>
         </div>

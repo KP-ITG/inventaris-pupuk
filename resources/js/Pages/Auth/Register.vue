@@ -5,16 +5,23 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const form = useForm({
     nama: '',
     email: '',
     password: '',
     password_confirmation: '',
-    role: 'distributor',
+    role: 'kepala_desa',
+    nama_desa: '',
+    kecamatan: '',
+    kabupaten: '',
+    provinsi: '',
     alamat: '',
     kontak: '',
 });
+
+const showDesaField = computed(() => form.role === 'kepala_desa');
 
 const submit = () => {
     form.post(route('register'), {
@@ -117,15 +124,87 @@ const submit = () => {
             <div class="w-full max-w-md lg:max-w-lg mx-auto">
                 <div class="bg-white py-6 px-6 shadow-2xl rounded-2xl sm:px-8 border border-gray-100">
                     <div class="text-center mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Pendaftaran Distributor</h2>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Pendaftaran Akun</h2>
                         <p class="text-gray-600">
-                            Isi formulir berikut untuk mendaftar sebagai distributor pupuk
+                            Isi formulir berikut untuk mendaftar sebagai Kepala Desa
                         </p>
                     </div>                    <form @submit.prevent="submit" class="space-y-4">
-                        <!-- Hidden field untuk role -->
-                        <input type="hidden" v-model="form.role" />
-
                         <div class="space-y-4">
+                            <!-- Role Selection -->
+                            <div>
+                                <InputLabel for="role" value="Daftar Sebagai *" class="text-gray-700 font-medium text-sm" />
+                                <select
+                                    id="role"
+                                    v-model="form.role"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm"
+                                    required
+                                >
+                                    <option value="kepala_desa">Kepala Desa</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                                <InputError class="mt-1" :message="form.errors.role" />
+                            </div>
+
+                            <!-- Desa Selection (only for kepala_desa) -->
+                            <!-- Data Desa Fields for Kepala Desa -->
+                            <div v-if="showDesaField" class="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                                <h3 class="font-medium text-gray-900 text-sm">Data Desa</h3>
+
+                                <div>
+                                    <InputLabel for="nama_desa" value="Nama Desa *" class="text-gray-700 font-medium text-sm" />
+                                    <TextInput
+                                        id="nama_desa"
+                                        type="text"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm"
+                                        v-model="form.nama_desa"
+                                        :required="showDesaField"
+                                        placeholder="Contoh: Desa Sukamaju"
+                                    />
+                                    <InputError class="mt-1" :message="form.errors.nama_desa" />
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <InputLabel for="kecamatan" value="Kecamatan *" class="text-gray-700 font-medium text-sm" />
+                                        <TextInput
+                                            id="kecamatan"
+                                            type="text"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm"
+                                            v-model="form.kecamatan"
+                                            :required="showDesaField"
+                                            placeholder="Contoh: Tarogong Kidul"
+                                        />
+                                        <InputError class="mt-1" :message="form.errors.kecamatan" />
+                                    </div>
+
+                                    <div>
+                                        <InputLabel for="kabupaten" value="Kabupaten *" class="text-gray-700 font-medium text-sm" />
+                                        <TextInput
+                                            id="kabupaten"
+                                            type="text"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm"
+                                            v-model="form.kabupaten"
+                                            :required="showDesaField"
+                                            placeholder="Contoh: Garut"
+                                        />
+                                        <InputError class="mt-1" :message="form.errors.kabupaten" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <InputLabel for="provinsi" value="Provinsi *" class="text-gray-700 font-medium text-sm" />
+                                    <TextInput
+                                        id="provinsi"
+                                        type="text"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm"
+                                        v-model="form.provinsi"
+                                        :required="showDesaField"
+                                        placeholder="Contoh: Jawa Barat"
+                                    />
+                                    <InputError class="mt-1" :message="form.errors.provinsi" />
+                                </div>
+                            </div>
+
                             <div>
                                 <InputLabel for="nama" value="Nama Lengkap *" class="text-gray-700 font-medium text-sm" />
                                 <TextInput

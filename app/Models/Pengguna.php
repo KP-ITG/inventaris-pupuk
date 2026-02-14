@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Hash;
 
 class Pengguna extends Authenticatable
@@ -20,6 +21,8 @@ class Pengguna extends Authenticatable
         'password_hash',
         'role',
         'status',
+        'desa_id',
+        'alasan_penolakan',
         'alamat',
         'kontak',
         'profile_picture'
@@ -39,6 +42,14 @@ class Pengguna extends Authenticatable
     public function getAuthPassword()
     {
         return $this->password_hash;
+    }
+
+    /**
+     * Relasi ke tabel desa (untuk kepala desa)
+     */
+    public function desa(): BelongsTo
+    {
+        return $this->belongsTo(Desa::class, 'desa_id');
     }
 
     /**

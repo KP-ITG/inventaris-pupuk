@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\Pengguna;
+use App\Models\Desa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,20 +27,39 @@ class AuthController extends Controller
     /**
      * Handle an incoming registration request.
      */
-    public function store(RegisterRequest $request): RedirectResponse
+    public function store(RegisterRequest $request): Response
     {
-        $user = Pengguna::create([
+        $userData = [
             'nama' => $request->nama,
             'email' => $request->email,
             'password_hash' => Hash::make($request->password),
-            'role' => $request->role ?? 'distributor',
+            'role' => $request->role ?? 'kepala_desa',
             'status' => 'pending', // Default status pending untuk approval
             'alamat' => $request->alamat,
             'kontak' => $request->kontak,
-        ]);
+        ];
 
-        // Tidak langsung login, tunggu approval
-        return redirect()->route('login')->with('success', 'Registrasi berhasil! Akun Anda sedang menunggu persetujuan dari administrator.');
+        // Jika role kepala_desa, buat data desa baru
+        if ($request->role === 'kepala_desa') {
+            $desa = Desa::create([
+                'nama_desa' => $request->nama_desa,
+                'kecamatan' => $request->kecamatan,
+                'kabupaten' => $request->kabupaten,
+                'provinsi' => $request->provinsi,
+                'nama_kepala_desa' => $request->nama,
+                'status' => 'aktif',
+            ]);
+
+            $userData['desa_id'] = $desa->id;
+        }
+
+        $user = Pengguna::create($userData);
+
+        // Redirect ke halaman pending approval
+        return Inertia::render('Auth/PendingApproval', [
+            'email' => $user->email,
+            'nama' => $user->nama,
+        ]);
     }
 
     /**
@@ -78,6 +98,11 @@ class AuthController extends Controller
             }
 
             $request->session()->regenerate();
+
+            // Redirect based on user role
+            if ($user->role === 'kepala_desa') {
+                return redirect()->intended(route('kepala-desa.dashboard', absolute: false));
+            }
 
             return redirect()->intended(route('dashboard', absolute: false));
         }

@@ -1,0 +1,16 @@
+// Tambahkan di routes/web.php untuk testing (HAPUS SETELAH TESTING!)
+
+Route::get('/test-email', function() {
+    $user = new \stdClass();
+    $user->nama = 'Test User';
+    $user->email = 'test@example.com'; // Ganti dengan email Anda
+
+    try {
+        Mail::to($user->email)->send(
+            new \App\Notifications\UserApprovalNotification('approved')
+        );
+        return 'Email sent successfully! Check your inbox.';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+})->middleware('auth');

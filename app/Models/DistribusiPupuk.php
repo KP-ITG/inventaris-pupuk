@@ -11,6 +11,7 @@ class DistribusiPupuk extends Model
     protected $table = 'distribusi_pupuk';
 
     protected $fillable = [
+        'permintaan_distribusi_id',
         'nomor_distribusi',
         'desa_id',
         'pengguna_id',
@@ -42,6 +43,11 @@ class DistribusiPupuk extends Model
     public function pengguna(): BelongsTo
     {
         return $this->belongsTo(Pengguna::class);
+    }
+
+    public function permintaanDistribusi(): BelongsTo
+    {
+        return $this->belongsTo(PermintaanDistribusi::class);
     }
 
     // Relasi untuk status log

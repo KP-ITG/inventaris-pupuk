@@ -13,8 +13,11 @@ const pageTitle = computed(() => {
     const url = page.url;
 
     if (url === '/dashboard') return 'Dashboard';
-    if (url === '/admin/users') return 'Manajemen User';
-    // if (url === '/admin/users/validations') return 'Validasi User';
+    if (url === '/kepala-desa/dashboard') return 'Dashboard';
+    if (url === '/kepala-desa/ajukan-permintaan') return 'Ajukan Permintaan';
+    if (url === '/kepala-desa/histori-permintaan') return 'Histori Permintaan';
+    if (url === '/admin/users/approvals') return 'Approval User';
+    if (url === '/admin/users') return 'Daftar User';
     if (url.startsWith('/admin/kategori')) return 'Kategori Pupuk';
     if (url.startsWith('/admin/nutrisi')) return 'Nutrisi';
     if (url.startsWith('/admin/pupuk')) return 'Pupuk';
@@ -25,33 +28,62 @@ const pageTitle = computed(() => {
 
     return 'Dashboard';
 });const navigation = computed(() => {
-    const mainNav = [
-        {
+    const mainNav = [];
+    const userManagement = [];
+    const dataManagement = [];
+
+    // Kepala Desa navigation
+    if (user.value.role === 'kepala_desa') {
+        mainNav.push(
+            {
+                name: 'Dashboard',
+                href: '/kepala-desa/dashboard',
+                icon: 'M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z',
+                current: page.url === '/kepala-desa/dashboard'
+            },
+            {
+                name: 'Ajukan Permintaan',
+                href: '/kepala-desa/ajukan-permintaan',
+                icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                current: page.url === '/kepala-desa/ajukan-permintaan'
+            },
+            {
+                name: 'Histori Permintaan',
+                href: '/kepala-desa/histori-permintaan',
+                icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+                current: page.url === '/kepala-desa/histori-permintaan'
+            }
+        );
+    }
+
+    // Admin navigation
+    if (user.value.role === 'admin') {
+        mainNav.push({
             name: 'Dashboard',
             href: '/dashboard',
             icon: 'M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z',
             current: page.url === '/dashboard'
-        },
-    ];
+        });
 
-    const userManagement = [];
-    const dataManagement = [];
-
-    // Admin navigation
-    if (user.value.role === 'admin') {
         userManagement.push(
             {
-                name: 'Manajemen User',
+                name: 'Approval User',
+                href: '/admin/users/approvals',
+                icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                current: page.url === '/admin/users/approvals'
+            },
+            {
+                name: 'Daftar User',
                 href: '/admin/users',
                 icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z',
                 current: page.url === '/admin/users'
             },
-            // {
-            //     name: 'Validasi User',
-            //     href: '/admin/users/validations',
-            //     icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-            //     current: page.url === '/admin/users/validations'
-            // }
+            {
+                name: 'Permintaan Distribusi',
+                href: '/admin/permintaan',
+                icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+                current: page.url.startsWith('/admin/permintaan')
+            }
         );
 
         dataManagement.push(
