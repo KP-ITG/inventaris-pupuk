@@ -18,7 +18,8 @@ class DashboardController extends Controller
 
         // Ambil stok di desa (dari distribusi yang sudah diterima/selesai)
         // Bukan dari stok pusat karena itu untuk admin
-        $stokPupuk = DB::table('distribusi_pupuk_detail')
+        // Total masuk dari distribusi
+        $distribusiMasuk = DB::table('distribusi_pupuk_detail')
             ->join('distribusi_pupuk', 'distribusi_pupuk_detail.distribusi_pupuk_id', '=', 'distribusi_pupuk.id')
             ->join('pupuk', 'distribusi_pupuk_detail.pupuk_id', '=', 'pupuk.id')
             ->join('kategori_pupuk', 'pupuk.kategori_id', '=', 'kategori_pupuk.id')
@@ -29,30 +30,36 @@ class DashboardController extends Controller
                 'pupuk.nama_pupuk',
                 'kategori_pupuk.id as kategori_id',
                 'kategori_pupuk.nama_kategori as kategori',
-                DB::raw('SUM(distribusi_pupuk_detail.jumlah_distribusi) as jumlah_stok')
+                DB::raw('SUM(distribusi_pupuk_detail.jumlah_distribusi) as total_masuk')
             )
             ->groupBy('pupuk.id', 'pupuk.nama_pupuk', 'kategori_pupuk.id', 'kategori_pupuk.nama_kategori')
             ->get()
-            ->map(function ($stok) use ($user) {
-                // Tentukan status stok berdasarkan jumlah
-                $status_stok = 'aman';
-                if ($stok->jumlah_stok <= 0) {
-                    $status_stok = 'habis';
-                } elseif ($stok->jumlah_stok <= 50) { // threshold untuk desa
-                    $status_stok = 'hampir_habis';
-                }
+            ->keyBy('pupuk_id');
 
-                return [
-                    'id' => $stok->pupuk_id,
-                    'pupuk_id' => $stok->pupuk_id,
-                    'kategori_id' => $stok->kategori_id,
-                    'nama_pupuk' => $stok->nama_pupuk,
-                    'kategori' => $stok->kategori,
-                    'jumlah_stok' => (int) $stok->jumlah_stok,
-                    'status_stok' => $status_stok,
-                    'lokasi_gudang' => 'Gudang Desa ' . ($user->desa->nama_desa ?? ''),
-                ];
-            });
+        // Total penggunaan per pupuk
+        $penggunaan = DB::table('penggunaan_pupuk')
+            ->where('desa_id', $user->desa_id)
+            ->select('pupuk_id', DB::raw('SUM(jumlah_digunakan) as total_digunakan'))
+            ->groupBy('pupuk_id')
+            ->get()
+            ->keyBy('pupuk_id');
+
+        $stokPupuk = $distribusiMasuk->map(function ($stok) use ($penggunaan, $user) {
+            $digunakan = (int) ($penggunaan[$stok->pupuk_id]->total_digunakan ?? 0);
+            $sisaStok  = max(0, (int) $stok->total_masuk - $digunakan);
+            $status_stok = $sisaStok <= 0 ? 'habis' : ($sisaStok <= 50 ? 'hampir_habis' : 'aman');
+
+            return [
+                'id' => $stok->pupuk_id,
+                'pupuk_id' => $stok->pupuk_id,
+                'kategori_id' => $stok->kategori_id,
+                'nama_pupuk' => $stok->nama_pupuk,
+                'kategori' => $stok->kategori,
+                'jumlah_stok' => $sisaStok,
+                'status_stok' => $status_stok,
+                'lokasi_gudang' => 'Gudang Desa ' . ($user->desa->nama_desa ?? ''),
+            ];
+        })->values();
 
         // Ambil distribusi pupuk untuk desa ini dengan status log
         $distribusi = DistribusiPupuk::with(['details.pupuk', 'statusLogs.user', 'permintaanDistribusi'])

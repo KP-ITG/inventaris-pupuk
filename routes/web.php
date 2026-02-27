@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\DistribusiPupukController;
 use App\Http\Controllers\Admin\PermintaanController as AdminPermintaanController;
 use App\Http\Controllers\Admin\ExportAllController;
 use App\Http\Controllers\KepalaDesa\DashboardController as KepalaDesa_DashboardController;
+use App\Http\Controllers\KepalaDesa\KelolaPupukController as KepalaDesa_KelolaPupukController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
@@ -100,6 +101,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/ajukan-permintaan', [KepalaDesa_DashboardController::class, 'ajukanPermintaan'])->name('ajukan-permintaan');
         Route::get('/histori-permintaan', [KepalaDesa_DashboardController::class, 'historiPermintaan'])->name('histori-permintaan');
         Route::post('/permintaan', [KepalaDesa_DashboardController::class, 'store'])->name('permintaan.store');
+        // Kelola Pupuk
+        Route::get('/kelola-pupuk', [KepalaDesa_KelolaPupukController::class, 'index'])->name('kelola-pupuk.index');
+        Route::post('/kelola-pupuk', [KepalaDesa_KelolaPupukController::class, 'store'])->name('kelola-pupuk.store');
     });
 });
 
