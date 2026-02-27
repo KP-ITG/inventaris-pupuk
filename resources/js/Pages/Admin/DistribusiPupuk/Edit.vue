@@ -52,7 +52,7 @@
                             </label>
                             <button
                                 type="button"
-                                @click="showAddItemForm = true"
+                                @click="openAddItemForm"
                                 class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                             >
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +159,7 @@
                                                                     <span class="font-medium text-gray-900">{{ pupuk.nama_pupuk }}</span>
                                                                     <span class="text-gray-500 text-sm">
                                                                         {{ pupuk.kategori?.nama_kategori }} |
-                                                                        Stok: {{ pupuk.stok?.jumlah_stok || 0 }} kg
+                                                                        Stok: {{ pupuk.stok_gudang_pusat || 0 }} kg
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -176,12 +176,12 @@
                                                         v-model.number="newItem.jumlah_distribusi"
                                                         type="number"
                                                         min="1"
-                                                        :max="selectedPupuk?.stok?.jumlah_stok || 999999"
+                                                        :max="selectedPupuk?.stok_gudang_pusat || 999999"
                                                         class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                                                         placeholder="Masukkan jumlah"
                                                     >
-                                                    <div v-if="selectedPupuk?.stok" class="mt-1 text-xs text-gray-500">
-                                                        Stok tersedia: {{ selectedPupuk.stok.jumlah_stok }} kg
+                                                    <div v-if="selectedPupuk" class="mt-1 text-xs text-gray-500">
+                                                        Stok tersedia: {{ selectedPupuk.stok_gudang_pusat }} kg
                                                     </div>
                                                     <div v-if="stockValidationMessage" class="mt-1 text-sm text-red-600">
                                                         {{ stockValidationMessage }}
@@ -421,6 +421,12 @@ const form = useForm({
 const processing = ref(false)
 const showAddItemForm = ref(false)
 
+const openAddItemForm = () => {
+    showAddItemForm.value = true
+    filteredPupuks.value = props.pupuks
+    showPupukDropdown.value = true
+}
+
 // Item form
 const newItem = ref({
     pupuk_id: null,
@@ -440,14 +446,14 @@ const selectedPupuk = ref(null)
 
 // Computed properties for validation
 const isStokCukup = computed(() => {
-    if (!selectedPupuk.value?.stok) return false
-    return newItem.value.jumlah_distribusi <= selectedPupuk.value.stok.jumlah_stok
+    if (!selectedPupuk.value) return false
+    return newItem.value.jumlah_distribusi <= selectedPupuk.value.stok_gudang_pusat
 })
 
 const stockValidationMessage = computed(() => {
-    if (!selectedPupuk.value?.stok) return ''
-    if (newItem.value.jumlah_distribusi > selectedPupuk.value.stok.jumlah_stok) {
-        return `Jumlah distribusi melebihi stok tersedia (${selectedPupuk.value.stok.jumlah_stok} kg)`
+    if (!selectedPupuk.value) return ''
+    if (newItem.value.jumlah_distribusi > selectedPupuk.value.stok_gudang_pusat) {
+        return `Jumlah distribusi melebihi stok tersedia (${selectedPupuk.value.stok_gudang_pusat} kg)`
     }
     return ''
 })
@@ -468,7 +474,7 @@ const filterDesas = () => {
 
 const filterPupuks = () => {
     if (!pupukSearch.value) {
-        filteredPupuks.value = props.pupuks.slice(0, 10)
+        filteredPupuks.value = props.pupuks
         return
     }
 
@@ -476,7 +482,7 @@ const filterPupuks = () => {
     filteredPupuks.value = props.pupuks.filter(pupuk =>
         pupuk.nama_pupuk.toLowerCase().includes(search) ||
         pupuk.kategori?.nama_kategori.toLowerCase().includes(search)
-    ).slice(0, 10)
+    )
 }
 
 // Selection functions
@@ -518,13 +524,13 @@ const addItem = () => {
     }
 
     // Validasi stok
-    if (!selectedPupuk.value?.stok) {
-        alert('Pupuk yang dipilih tidak memiliki stok')
+    if (!selectedPupuk.value) {
+        alert('Silakan pilih pupuk terlebih dahulu')
         return
     }
 
-    if (newItem.value.jumlah_distribusi > selectedPupuk.value.stok.jumlah_stok) {
-        alert(`Jumlah distribusi (${newItem.value.jumlah_distribusi} kg) melebihi stok tersedia (${selectedPupuk.value.stok.jumlah_stok} kg)`)
+    if (newItem.value.jumlah_distribusi > selectedPupuk.value.stok_gudang_pusat) {
+        alert(`Jumlah distribusi (${newItem.value.jumlah_distribusi} kg) melebihi stok tersedia (${selectedPupuk.value.stok_gudang_pusat} kg)`)
         return
     }
 
@@ -565,7 +571,7 @@ const getPupukName = (pupukId) => {
 
 const getPupukStok = (pupukId) => {
     const pupuk = props.pupuks.find(p => p.id === pupukId)
-    return pupuk?.stok?.jumlah_stok || 0
+    return pupuk?.stok_gudang_pusat || 0
 }
 
 // Submit form
@@ -603,7 +609,7 @@ const handleClickOutside = (event) => {
 onMounted(() => {
     // Initialize filtered lists
     filteredDesas.value = props.desas.slice(0, 10)
-    filteredPupuks.value = props.pupuks.slice(0, 10)
+    filteredPupuks.value = props.pupuks
 
     // Set initial values
     const currentDesa = props.desas.find(d => d.id === props.distribusi.desa_id)

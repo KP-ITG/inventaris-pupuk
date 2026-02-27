@@ -13,10 +13,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            PenggunaSeeder::class,
-            KategoriPupukSeeder::class,
-            PupukSeeder::class,
-            StokSeeder::class,
+            // Data pengguna & desa dijalankan terpisah
+            // PenggunaSeeder::class,
+            // AdminSeeder::class,
+            // DesaSeeder::class,
+
+            // Master data (kategori, supplier, nutrisi, pupuk, pupuk_nutrisi)
+            MasterDataSeeder::class,
         ]);
     }
 }

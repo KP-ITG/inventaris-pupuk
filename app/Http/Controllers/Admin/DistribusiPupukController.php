@@ -8,7 +8,6 @@ use App\Models\DistribusiPupukDetail;
 use App\Models\DistribusiStatusLog;
 use App\Models\Desa;
 use App\Models\Pupuk;
-use App\Models\Stok;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -60,10 +59,8 @@ class DistribusiPupukController extends Controller
 
     public function create()
     {
-        $pupuks = Pupuk::with(['stok', 'kategori'])
-                       ->whereHas('stok', function($q) {
-                           $q->where('jumlah_stok', '>', 0);
-                       })
+        $pupuks = Pupuk::with(['kategori'])
+                       ->where('stok_gudang_pusat', '>', 0)
                        ->get();
 
         $desas = Desa::orderBy('nama_desa')->get();
@@ -95,10 +92,9 @@ class DistribusiPupukController extends Controller
 
             // Validasi stok untuk setiap item
             foreach ($validated['items'] as $item) {
-                $stok = Stok::where('pupuk_id', $item['pupuk_id'])->first();
-                if (!$stok || $stok->jumlah_stok < $item['jumlah_distribusi']) {
-                    $pupuk = Pupuk::find($item['pupuk_id']);
-                    throw new \Exception("Stok {$pupuk->nama_pupuk} tidak mencukupi untuk distribusi ini");
+                $pupuk = Pupuk::find($item['pupuk_id']);
+                if (!$pupuk || $pupuk->stok_gudang_pusat < $item['jumlah_distribusi']) {
+                    throw new \Exception("Stok {$pupuk->nama_pupuk} tidak mencukupi (tersedia: {$pupuk->stok_gudang_pusat} kg)");
                 }
             }
 
@@ -131,10 +127,9 @@ class DistribusiPupukController extends Controller
                     'catatan_item' => $item['catatan_item'] ?? null
                 ]);
 
-                // Kurangi stok jika status bukan rencana atau batal
+                // Kurangi stok gudang pusat jika status bukan rencana atau batal
                 if (in_array($validated['status_distribusi'], ['dalam_perjalanan', 'selesai'])) {
-                    $stok = Stok::where('pupuk_id', $item['pupuk_id'])->first();
-                    $stok->kurangiStok($item['jumlah_distribusi']);
+                    Pupuk::where('id', $item['pupuk_id'])->decrement('stok_gudang_pusat', $item['jumlah_distribusi']);
                 }
             }
 
@@ -162,10 +157,8 @@ class DistribusiPupukController extends Controller
 
     public function edit(DistribusiPupuk $distribusiPupuk)
     {
-        $pupuks = Pupuk::with(['stok', 'kategori'])
-                       ->whereHas('stok', function($q) {
-                           $q->where('jumlah_stok', '>', 0);
-                       })
+        $pupuks = Pupuk::with(['kategori'])
+                       ->where('stok_gudang_pusat', '>', 0)
                        ->get();
 
         $desas = Desa::orderBy('nama_desa')->get();
@@ -220,25 +213,19 @@ class DistribusiPupukController extends Controller
             // Kembalikan stok untuk items lama jika status lama mengurangi stok
             if (in_array($statusLama, ['dalam_perjalanan', 'selesai'])) {
                 foreach ($distribusiPupuk->details as $detail) {
-                    $stok = Stok::where('pupuk_id', $detail->pupuk_id)->first();
-                    if ($stok) {
-                        $stok->tambahStok($detail->jumlah_distribusi);
-                    }
+                    Pupuk::where('id', $detail->pupuk_id)->increment('stok_gudang_pusat', $detail->jumlah_distribusi);
                 }
             }
 
             // Hapus semua detail lama
             $distribusiPupuk->details()->delete();
 
-            // Validasi dan buat detail baru
-            foreach ($validated['items'] as $item) {
-                $stok = Stok::where('pupuk_id', $item['pupuk_id'])->first();
-
-                // Cek stok jika status baru mengurangi stok
-                if (in_array($statusBaru, ['dalam_perjalanan', 'selesai'])) {
-                    if (!$stok || $stok->jumlah_stok < $item['jumlah_distribusi']) {
-                        $pupuk = Pupuk::find($item['pupuk_id']);
-                        throw new \Exception("Stok {$pupuk->nama_pupuk} tidak mencukupi untuk distribusi ini");
+            // Validasi stok jika status baru mengurangi stok
+            if (in_array($statusBaru, ['dalam_perjalanan', 'selesai'])) {
+                foreach ($validated['items'] as $item) {
+                    $pupuk = Pupuk::find($item['pupuk_id']);
+                    if (!$pupuk || $pupuk->stok_gudang_pusat < $item['jumlah_distribusi']) {
+                        throw new \Exception("Stok {$pupuk->nama_pupuk} tidak mencukupi (tersedia: {$pupuk->stok_gudang_pusat} kg)");
                     }
                 }
             }
@@ -253,8 +240,7 @@ class DistribusiPupukController extends Controller
                 ]);
 
                 if (in_array($statusBaru, ['dalam_perjalanan', 'selesai'])) {
-                    $stok = Stok::where('pupuk_id', $item['pupuk_id'])->first();
-                    $stok->kurangiStok($item['jumlah_distribusi']);
+                    Pupuk::where('id', $item['pupuk_id'])->decrement('stok_gudang_pusat', $item['jumlah_distribusi']);
                 }
             }
 
@@ -284,10 +270,7 @@ class DistribusiPupukController extends Controller
             // Kembalikan stok jika distribusi dalam status yang mengurangi stok
             if (in_array($distribusiPupuk->status_distribusi, ['dalam_perjalanan', 'selesai'])) {
                 foreach ($distribusiPupuk->details as $detail) {
-                    $stok = Stok::where('pupuk_id', $detail->pupuk_id)->first();
-                    if ($stok) {
-                        $stok->tambahStok($detail->jumlah_distribusi);
-                    }
+                    Pupuk::where('id', $detail->pupuk_id)->increment('stok_gudang_pusat', $detail->jumlah_distribusi);
                 }
             }
 
@@ -339,22 +322,18 @@ class DistribusiPupukController extends Controller
 
             // Process untuk setiap item di details
             foreach ($distribusiPupuk->details as $detail) {
-                $stok = Stok::where('pupuk_id', $detail->pupuk_id)->first();
-
-                if (!$stok) {
-                    throw new \Exception('Stok pupuk ' . ($detail->pupuk->nama_pupuk ?? 'unknown') . ' tidak ditemukan');
-                }
+                $pupuk = Pupuk::find($detail->pupuk_id);
 
                 // Jika status lama mengurangi stok dan status baru tidak, kembalikan stok
                 if (in_array($statusLama, $statusYangMengurangiStok) && !in_array($statusBaru, $statusYangMengurangiStok)) {
-                    $stok->tambahStok($detail->jumlah_distribusi);
+                    Pupuk::where('id', $detail->pupuk_id)->increment('stok_gudang_pusat', $detail->jumlah_distribusi);
                 }
-                // Jika status lama tidak mengurangi stok dan status baru mengurangi, kurangi stok
+                // Jika status lama tidak mengurangi stok dan status baru mengurangi, validasi & kurangi stok
                 elseif (!in_array($statusLama, $statusYangMengurangiStok) && in_array($statusBaru, $statusYangMengurangiStok)) {
-                    if ($stok->jumlah_stok < $detail->jumlah_distribusi) {
-                        throw new \Exception('Stok ' . ($detail->pupuk->nama_pupuk ?? 'unknown') . ' tidak mencukupi (tersedia: ' . $stok->jumlah_stok . ' kg, dibutuhkan: ' . $detail->jumlah_distribusi . ' kg)');
+                    if (!$pupuk || $pupuk->stok_gudang_pusat < $detail->jumlah_distribusi) {
+                        throw new \Exception('Stok ' . ($pupuk->nama_pupuk ?? 'unknown') . ' tidak mencukupi (tersedia: ' . ($pupuk->stok_gudang_pusat ?? 0) . ' kg, dibutuhkan: ' . $detail->jumlah_distribusi . ' kg)');
                     }
-                    $stok->kurangiStok($detail->jumlah_distribusi);
+                    Pupuk::where('id', $detail->pupuk_id)->decrement('stok_gudang_pusat', $detail->jumlah_distribusi);
                 }
             }
 

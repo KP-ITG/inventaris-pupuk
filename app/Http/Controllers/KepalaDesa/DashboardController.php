@@ -4,7 +4,6 @@ namespace App\Http\Controllers\KepalaDesa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pupuk;
-use App\Models\Stok;
 use App\Models\PermintaanDistribusi;
 use App\Models\DistribusiPupuk;
 use Illuminate\Http\Request;
@@ -124,18 +123,19 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Ambil data stok pupuk dengan relasi
-        $stokPupuk = Stok::with(['pupuk.kategori', 'pupuk.supplier'])
+        // Ambil daftar pupuk yang tersedia di gudang pusat (stok_gudang_pusat > 0)
+        $stokPupuk = Pupuk::with(['kategori'])
+            ->where('stok_gudang_pusat', '>', 0)
             ->get()
-            ->map(function ($stok) {
+            ->map(function ($pupuk) {
                 return [
-                    'id' => $stok->id,
-                    'pupuk_id' => $stok->pupuk_id,
-                    'kategori_id' => $stok->pupuk->kategori_id,
-                    'nama_pupuk' => $stok->pupuk->nama_pupuk,
-                    'kategori' => $stok->pupuk->kategori->nama_kategori,
-                    'jumlah' => $stok->jumlah,
-                    'satuan' => $stok->satuan,
+                    'id'         => $pupuk->id,
+                    'pupuk_id'   => $pupuk->id,
+                    'kategori_id'=> $pupuk->kategori_id,
+                    'nama_pupuk' => $pupuk->nama_pupuk,
+                    'kategori'   => $pupuk->kategori->nama_kategori ?? '-',
+                    'jumlah'     => $pupuk->stok_gudang_pusat,
+                    'satuan'     => 'kg',
                 ];
             });
 
